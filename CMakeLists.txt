@@ -1,0 +1,141 @@
+PROJECT(NTLM C)
+
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
+
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${NTLM_SOURCE_DIR}/cmake")
+
+INCLUDE(AddCFlagIfSupported)
+INCLUDE(EnableWarnings)
+INCLUDE(FeatureSummary)
+
+OPTION(BUILD_LIBRARY "Build the NTLM library" ON)
+OPTION(BUILD_TESTS   "Build the test suite" ON)
+
+SET(UNICODE "default" CACHE STRING "Unicode implementation to use; may be 'iconv' or 'builtin'.")
+SET(CRYPT "default"   CACHE STRING "Cryptographic implementation to use; may be 'commoncrypto' or 'openssl'.")
+
+SET(PATH_SRC     "${NTLM_SOURCE_DIR}/src")
+SET(PATH_INCLUDE "${NTLM_SOURCE_DIR}/include")
+SET(PATH_TESTS   "${NTLM_SOURCE_DIR}/tests")
+
+# Default to iconv support if available; fallback to builtin conversion
+IF(UNICODE STREQUAL "default")
+	FIND_PACKAGE(Iconv)
+
+	IF(ICONV_FOUND)
+		SET(UNICODE "iconv")
+	ELSE()
+		SET(UNICODE "builtin")
+	ENDIF()
+ENDIF()
+
+# Set up the unicode libraries
+IF(UNICODE STREQUAL "iconv")
+	FIND_PACKAGE(Iconv)
+
+	IF(NOT ICONV_FOUND)
+		MESSAGE(FATAL_ERROR "iconv support was not found")
+	ENDIF()
+
+	ADD_DEFINITIONS(-DUNICODE_ICONV)
+	FILE(GLOB NTLM_SRC_UNICODE "${PATH_SRC}/unicode_iconv.c")
+
+	LIST(APPEND NTLM_INCLUDES ${ICONV_INCLUDE_DIR})
+	LIST(APPEND NTLM_LIBS ${ICONV_LIBRARIES})
+	LIST(APPEND NTLM_PC_LIBS ${ICONV_LIBRARIES})
+
+	ADD_FEATURE_INFO(UNICODE ON "using system iconv libraries")
+ELSEIF(UNICODE STREQUAL "builtin")
+	ADD_DEFINITIONS(-DUNICODE_BUILTIN)
+	FILE(GLOB NTLM_SRC_UNICODE "${PATH_SRC}/unicode_builtin.c")
+
+	ADD_FEATURE_INFO(UNICODE ON "using builtin Unicode conversion support")
+ELSE()
+	MESSAGE(FATAL_ERROR "invalid unicode support requested: ${UNICODE}")
+ENDIF()
+
+# Locate crypto support: default to CommonCrypto on macOS, use openssl
+# otherwise.
+IF(CRYPT STREQUAL "default")
+	IF(APPLE)
+		SET(CRYPT "commoncrypto")
+	ELSE()
+		SET(CRYPT "openssl")
+	ENDIF()
+ENDIF()
+
+IF(CRYPT STREQUAL "commoncrypto")
+	ADD_DEFINITIONS(-DCRYPT_COMMONCRYPTO)
+	FILE(GLOB NTLM_SRC_CRYPT "${PATH_SRC}/crypt_commoncrypto.c")
+
+	ADD_FEATURE_INFO(CRYPT ON "using macOS CommonCrypto support")
+ELSEIF(CRYPT STREQUAL "openssl")
+	FIND_PACKAGE(OpenSSL)
+
+	IF(NOT OPENSSL_FOUND)
+		MESSAGE(FATAL_ERROR "OpenSSL support was not found.  Please install the necessary OpenSSL development libraries.")
+	ENDIF()
+
+	ADD_DEFINITIONS(-DCRYPT_OPENSSL)
+	FILE(GLOB NTLM_SRC_CRYPT "${PATH_SRC}/crypt_openssl.c")
+
+	LIST(APPEND NTLM_INCLUDES ${OPENSSL_INCLUDE_DIR})
+	LIST(APPEND NTLM_LIBS ${OPENSSL_LIBRARIES})
+	LIST(APPEND NTLM_PC_LIBS ${OPENSSL_LIBRARIES})
+
+	ADD_FEATURE_INFO(CRYPT ON "using OpenSSL")
+ELSE()
+	MESSAGE(FATAL_ERROR "invalid cryptographic support requested: ${CRYPT}")
+ENDIF()
+
+ENABLE_WARNINGS(all)
+ENABLE_WARNINGS(extra)
+ENABLE_WARNINGS(documentation)
+ENABLE_WARNINGS(missing-field-initializers)
+ENABLE_WARNINGS(strict-aliasing=2)
+ENABLE_WARNINGS(strict-prototypes)
+ENABLE_WARNINGS(declaration-after-statement)
+ENABLE_WARNINGS(unused-const-variable)
+ENABLE_WARNINGS(unused-function)
+
+IF(NOT CMAKE_CONFIGURATION_TYPES)
+	IF (NOT CMAKE_BUILD_TYPE)
+		SET(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Type of build: Debug, Release, RelWithDebInfo, MinSizeRel.  Default is Debug." FORCE)
+    ENDIF()
+ENDIF()
+
+FEATURE_SUMMARY(WHAT ENABLED_FEATURES DESCRIPTION "Configuration summary:")
+
+
+FILE(GLOB NTLM_SRC_COMMON "${PATH_SRC}/ntlm.c" "${PATH_SRC}/util.c")
+SET(NTLM_SRC ${NTLM_SRC_COMMON} ${NTLM_SRC_CRYPT} ${NTLM_SRC_UNICODE})
+
+IF(BUILD_LIBRARY)
+	INCLUDE_DIRECTORIES(${PATH_SRC} ${PATH_INCLUDE})
+	ADD_LIBRARY(ntlm ${NTLM_SRC})
+
+	TARGET_LINK_LIBRARIES(ntlm ${NTLM_LIBS})
+	TARGET_INCLUDE_DIRECTORIES(ntlm
+		PRIVATE ${NTLM_INCLUDES}
+		PUBLIC "${NTLM_SOURCE_DIR}/include")
+ENDIF()
+
+IF(BUILD_TESTS)
+	FILE(GLOB NTLM_TEST "${PATH_TESTS}/*.c")
+
+	ADD_CUSTOM_COMMAND(
+		OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/clar.suite"
+		COMMAND ${PYTHON_EXECUTABLE} ./generate.py -o "${CMAKE_CURRENT_BINARY_DIR}" .
+		DEPENDS ${NTLM_SRC} ${NTLM_TEST}
+		WORKING_DIRECTORY ${PATH_TESTS})
+
+	SET_SOURCE_FILES_PROPERTIES(${PATH_TESTS}/clar.c
+		PROPERTIES OBJECT_DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/clar.suite")
+
+	INCLUDE_DIRECTORIES(${PATH_SRC} ${PATH_INCLUDE} ${PATH_TESTS}
+		${CMAKE_CURRENT_BINARY_DIR}
+		${NTLM_INCLUDES})
+
+	ADD_EXECUTABLE(ntlm_tests ${NTLM_SRC} ${NTLM_TEST})
+	TARGET_LINK_LIBRARIES(ntlm_tests ${NTLM_LIBS})
+ENDIF()
