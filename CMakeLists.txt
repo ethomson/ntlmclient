@@ -13,6 +13,7 @@ INCLUDE(EnableWarnings)
 INCLUDE(FeatureSummary)
 
 OPTION(BUILD_LIBRARY "Build the NTLM library" ON)
+OPTION(BUILD_CLI     "Build the command-line interface" ON)
 OPTION(BUILD_TESTS   "Build the test suite" ON)
 
 SET(UNICODE "default" CACHE STRING "Unicode implementation to use; may be 'iconv' or 'builtin'.")
@@ -20,6 +21,7 @@ SET(CRYPT   "default" CACHE STRING "Cryptographic implementation to use; may be 
 
 SET(PATH_SRC     "${NTLM_SOURCE_DIR}/src")
 SET(PATH_INCLUDE "${NTLM_SOURCE_DIR}/include")
+SET(PATH_CLI     "${NTLM_SOURCE_DIR}/cli")
 SET(PATH_TESTS   "${NTLM_SOURCE_DIR}/tests")
 
 # Default to iconv support if available; fallback to builtin conversion
@@ -161,4 +163,11 @@ IF(BUILD_TESTS)
 
 	ADD_EXECUTABLE(ntlm_tests ${NTLM_SRC} ${NTLM_TEST})
 	TARGET_LINK_LIBRARIES(ntlm_tests ${NTLM_LIBS})
+ENDIF()
+
+IF(BUILD_CLI)
+	FILE(GLOB NTLM_CLI "${PATH_CLI}/*.c")
+
+	ADD_EXECUTABLE(ntlm ${NTLM_CLI})
+	TARGET_LINK_LIBRARIES(ntlm ntlmclient_static ${NTLM_LIBS})
 ENDIF()
