@@ -1,0 +1,8 @@
+{
+ "name": "ntlmclient",
+ "github": "ethomson/ntlmclient",
+ "input": "include",
+ "prefix": "ntlm_",
+ "output": "docs",
+ "branch": "gh-pages"
+}
