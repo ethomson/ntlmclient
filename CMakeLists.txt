@@ -2,6 +2,10 @@ PROJECT(NTLM C)
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
 
+IF (POLICY CMP0042)
+    CMAKE_POLICY(SET CMP0042 NEW)
+ENDIF()
+
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${NTLM_SOURCE_DIR}/cmake")
 
 INCLUDE(AddCFlagIfSupported)
@@ -12,7 +16,7 @@ OPTION(BUILD_LIBRARY "Build the NTLM library" ON)
 OPTION(BUILD_TESTS   "Build the test suite" ON)
 
 SET(UNICODE "default" CACHE STRING "Unicode implementation to use; may be 'iconv' or 'builtin'.")
-SET(CRYPT "default"   CACHE STRING "Cryptographic implementation to use; may be 'commoncrypto' or 'openssl'.")
+SET(CRYPT   "default" CACHE STRING "Cryptographic implementation to use; may be 'commoncrypto' or 'openssl'.")
 
 SET(PATH_SRC     "${NTLM_SOURCE_DIR}/src")
 SET(PATH_INCLUDE "${NTLM_SOURCE_DIR}/include")
@@ -107,15 +111,34 @@ ENDIF()
 FEATURE_SUMMARY(WHAT ENABLED_FEATURES DESCRIPTION "Configuration summary:")
 
 
+# Parse the version number
+FILE(STRINGS "${PATH_INCLUDE}/ntlmclient.h" NTLM_HEADER_VERSION REGEX "^#define NTLM_CLIENT_VERSION[\\t ]+")
+STRING(REGEX REPLACE "^#define NTLM_CLIENT_VERSION[\\t ]+\"(.*)\".*$" "\\1" NTLM_VERSION "${NTLM_HEADER_VERSION}")
+
+FILE(STRINGS "${PATH_INCLUDE}/ntlmclient.h" NTLM_HEADER_MAJOR REGEX "^#define NTLM_CLIENT_VERSION_MAJOR[\\t ]+")
+STRING(REGEX REPLACE "^#define NTLM_CLIENT_VERSION_MAJOR[\\t ]+([0-9]+).*$" "\\1" NTLM_SOVERSION "${NTLM_HEADER_MAJOR}")
+
+
+# Set up the build targets
 FILE(GLOB NTLM_SRC_COMMON "${PATH_SRC}/ntlm.c" "${PATH_SRC}/util.c")
 SET(NTLM_SRC ${NTLM_SRC_COMMON} ${NTLM_SRC_CRYPT} ${NTLM_SRC_UNICODE})
 
 IF(BUILD_LIBRARY)
 	INCLUDE_DIRECTORIES(${PATH_SRC} ${PATH_INCLUDE})
-	ADD_LIBRARY(ntlm ${NTLM_SRC})
+	ADD_LIBRARY(ntlmclient OBJECT ${NTLM_SRC})
+	SET_PROPERTY(TARGET ntlmclient PROPERTY POSITION_INDEPENDENT_CODE 1)
 
-	TARGET_LINK_LIBRARIES(ntlm ${NTLM_LIBS})
-	TARGET_INCLUDE_DIRECTORIES(ntlm
+	ADD_LIBRARY(ntlmclient_shared SHARED $<TARGET_OBJECTS:ntlmclient>)
+	SET_TARGET_PROPERTIES(ntlmclient_shared PROPERTIES OUTPUT_NAME ntlmclient)
+	SET_TARGET_PROPERTIES(ntlmclient_shared PROPERTIES VERSION ${NTLM_VERSION})
+	SET_TARGET_PROPERTIES(ntlmclient_shared PROPERTIES SOVERSION ${NTLM_SOVERSION})
+	TARGET_LINK_LIBRARIES(ntlmclient_shared ${NTLM_LIBS})
+
+	ADD_LIBRARY(ntlmclient_static STATIC $<TARGET_OBJECTS:ntlmclient>)
+	SET_TARGET_PROPERTIES(ntlmclient_static PROPERTIES OUTPUT_NAME ntlmclient)
+	TARGET_LINK_LIBRARIES(ntlmclient_static ${NTLM_LIBS})
+
+	TARGET_INCLUDE_DIRECTORIES(ntlmclient
 		PRIVATE ${NTLM_INCLUDES}
 		PUBLIC "${NTLM_SOURCE_DIR}/include")
 ENDIF()
