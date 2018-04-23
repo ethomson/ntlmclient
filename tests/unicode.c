@@ -127,15 +127,15 @@ void test_unicode__utf8to16_zero_length_string(void)
 
 void test_unicode__utf8to16_simple(void)
 {
-	char a[] =         { 'a', 0 };
-	char ab[] =        { 'a', 0, 'b', 0 };
-	char abc[] =       { 'a', 0, 'b', 0, 'c', 0 };
-	char abcd[] =      { 'a', 0, 'b', 0, 'c', 0, 'd', 0 };
-	char abcde[] =     { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 'e', 0 };
-	char abcdef[] =    { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 'e', 0, 'f', 0 };
-	char abcdefg[] =   { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 'e', 0, 'f', 0, 'g', 0 };
-	char abcdefgh[] =  { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 'e', 0, 'f', 0, 'g', 0, 'h', 0 };
-	char abcdefghi[] = { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 'e', 0, 'f', 0, 'g', 0, 'h', 0, 'i', 0 };
+	char a[] =         { 'a', 0, 0, 0 };
+	char ab[] =        { 'a', 0, 'b', 0, 0, 0 };
+	char abc[] =       { 'a', 0, 'b', 0, 'c', 0, 0, 0 };
+	char abcd[] =      { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 0, 0 };
+	char abcde[] =     { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 'e', 0, 0, 0 };
+	char abcdef[] =    { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 'e', 0, 'f', 0, 0, 0 };
+	char abcdefg[] =   { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 'e', 0, 'f', 0, 'g', 0, 0, 0 };
+	char abcdefgh[] =  { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 'e', 0, 'f', 0, 'g', 0, 'h', 0, 0, 0 };
+	char abcdefghi[] = { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 'e', 0, 'f', 0, 'g', 0, 'h', 0, 'i', 0, 0, 0 };
 
 	assert_utf8_to_16(ctx, a, "a", 1);
 	assert_utf8_to_16(ctx, ab, "ab", 2);
@@ -150,7 +150,7 @@ void test_unicode__utf8to16_simple(void)
 
 void test_unicode__utf8to16_honors_length(void)
 {
-	char abcde[] = { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 'e', 0 };
+	char abcde[] = { 'a', 0, 'b', 0, 'c', 0, 'd', 0, 'e', 0, 0, 0};
 
 	assert_utf8_to_16(ctx, abcde, "abcdefghijklmnop", 5);
 }
