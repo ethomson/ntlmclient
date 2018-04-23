@@ -17,7 +17,7 @@ OPTION(BUILD_CLI     "Build the command-line interface" ON)
 OPTION(BUILD_TESTS   "Build the test suite" ON)
 
 SET(UNICODE "default" CACHE STRING "Unicode implementation to use; may be 'iconv' or 'builtin'.")
-SET(CRYPT   "default" CACHE STRING "Cryptographic implementation to use; may be 'commoncrypto' or 'openssl'.")
+SET(CRYPT   "default" CACHE STRING "Cryptographic implementation to use; may be 'commoncrypto', 'mbedtls' or 'openssl'.")
 
 SET(PATH_SRC     "${NTLM_SOURCE_DIR}/src")
 SET(PATH_INCLUDE "${NTLM_SOURCE_DIR}/include")
@@ -66,7 +66,16 @@ IF(CRYPT STREQUAL "default")
 	IF(APPLE)
 		SET(CRYPT "commoncrypto")
 	ELSE()
-		SET(CRYPT "openssl")
+		FIND_PACKAGE(mbedTLS)
+		FIND_PACKAGE(OpenSSL)
+
+		IF(MBEDTLS_FOUND)
+			SET(CRYPT "mbedtls")
+		ELSEIF(OPENSSL_FOUND)
+			SET(CRYPT "openssl")
+		ELSE()
+			MESSAGE(FATAL_ERROR "could not locate cryptographic libraries; install OpenSSL or mbedTLS")
+		ENDIF()
 	ENDIF()
 ENDIF()
 
@@ -75,6 +84,21 @@ IF(CRYPT STREQUAL "commoncrypto")
 	FILE(GLOB NTLM_SRC_CRYPT "${PATH_SRC}/crypt_commoncrypto.c")
 
 	ADD_FEATURE_INFO(CRYPT ON "using macOS CommonCrypto support")
+ELSEIF(CRYPT STREQUAL "mbedtls")
+	FIND_PACKAGE(mbedTLS)
+
+	IF(NOT MBEDTLS_FOUND)
+		MESSAGE(FATAL_ERROR "mbedTLS support was not found.  Please install the necessary mbedTLS development libraries.")
+	ENDIF()
+
+	ADD_DEFINITIONS(-DCRYPT_MBEDTLS)
+	FILE(GLOB NTLM_SRC_CRYPT "${PATH_SRC}/crypt_mbedtls.c")
+
+	LIST(APPEND NTLM_INCLUDES ${MBEDTLS_INCLUDE_DIR})
+	LIST(APPEND NTLM_LIBS ${MBEDTLS_LIBRARIES})
+	LIST(APPEND NTLM_PC_LIBS ${MBEDTLS_LIBRARIES})
+
+	ADD_FEATURE_INFO(CRYPT ON "using mbedTLS")
 ELSEIF(CRYPT STREQUAL "openssl")
 	FIND_PACKAGE(OpenSSL)
 

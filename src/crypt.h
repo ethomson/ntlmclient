@@ -11,6 +11,8 @@
 
 #if defined(CRYPT_OPENSSL)
 # include "crypt_openssl.h"
+#elif defined(CRYPT_MBEDTLS)
+# include "crypt_mbedtls.h"
 #elif defined(CRYPT_COMMONCRYPTO)
 # include "crypt_commoncrypto.h"
 #else
