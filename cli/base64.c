@@ -33,7 +33,6 @@ unsigned char * base64_encode(const unsigned char *src, size_t len,
 	unsigned char *out, *pos;
 	const unsigned char *end, *in;
 	size_t olen;
-	int line_len;
 
 	olen = len * 4 / 3 + 4; /* 3-byte blocks to 4-byte */
 	olen += 2; /* nul termination and line feed */
@@ -46,7 +45,6 @@ unsigned char * base64_encode(const unsigned char *src, size_t len,
 	end = src + len;
 	in = src;
 	pos = out;
-	line_len = 0;
 	while (end - in >= 3) {
 		*pos++ = base64_table[in[0] >> 2];
 		*pos++ = base64_table[((in[0] & 0x03) << 4) | (in[1] >> 4)];
