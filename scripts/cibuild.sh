@@ -5,7 +5,7 @@ set -x
 mkdir _build
 cd _build
 
-cmake ..
+cmake .. $OPTIONS
 make -j2
 
 ./ntlm_tests
