@@ -183,7 +183,8 @@ ntlmclient supports:
 * macOS and Linux Support
   Cryptographic primitives are provided by
   [CommonCrypto](https://developer.apple.com/security/) on macOS, and
-  [OpenSSL](https://www.openssl.org) on non-macOS platforms.
+  [OpenSSL](https://www.openssl.org) or [mbedTLS](https://tls.mbed.org/)
+  on non-macOS platforms.
 
   Unicode functionality (UTF8 to UTF16 conversion) is provided by
   [iconv](https://en.wikipedia.org/wiki/Iconv) when available, falling
