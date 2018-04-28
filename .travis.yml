@@ -35,6 +35,12 @@ matrix:
    - os: osx
      compiler: clang
 
+   - os: linux
+     compiler: gcc
+     env:
+       - COVERITY=1
+         OPTIONS="-DCRYPT=openssl"
+
 script:
  - scripts/cibuild.sh
 
