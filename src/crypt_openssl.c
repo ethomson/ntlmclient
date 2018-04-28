@@ -120,9 +120,6 @@ bool ntlm_hmac_md5_final(
 	if (!HMAC_Final(ctx, out, &len))
 		return false;
 
-	if (len > UINT_MAX)
-		return false;
-
 	*out_len = len;
 	return true;
 }
