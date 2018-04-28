@@ -18,7 +18,7 @@ enum ntlm_cli_type {
 	NTLM_CLI_RESPONSE
 };
 
-static int read_challenge(unsigned char **out, size_t *out_len, int raw)
+static void read_challenge(unsigned char **out, size_t *out_len, int raw)
 {
 	unsigned char *msg, *base64;
 	size_t msg_len = 0, base64_len, remain = 10240;
@@ -31,7 +31,7 @@ static int read_challenge(unsigned char **out, size_t *out_len, int raw)
 		ret = read(STDIN_FILENO, msg + msg_len, remain);
 
 		if (ret < 0)
-			return -1;
+			die("could not read challenge");
 		else if (ret == 0)
 			break;
 
@@ -53,8 +53,6 @@ static int read_challenge(unsigned char **out, size_t *out_len, int raw)
 		*out = base64;
 		*out_len = base64_len;
 	}
-
-	return 0;
 }
 
 static void show_message(const unsigned char *msg, size_t msg_len, int raw)
@@ -162,8 +160,7 @@ int main(int argc, char **argv)
 		if (ntlm_client_negotiate(&message, &message_len, ntlm))
 			die(ntlm_client_errmsg(ntlm));
 	} else {
-		if (read_challenge(&challenge, &challenge_len, raw))
-			die(strerror(errno));
+		read_challenge(&challenge, &challenge_len, raw);
 
 		if (ntlm_client_set_challenge(ntlm, challenge, challenge_len) ||
 			ntlm_client_response(&message, &message_len, ntlm))
