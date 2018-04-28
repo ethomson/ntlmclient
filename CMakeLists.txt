@@ -118,6 +118,8 @@ ELSE()
 	MESSAGE(FATAL_ERROR "invalid cryptographic support requested: ${CRYPT}")
 ENDIF()
 
+SET(CMAKE_C_FLAGS "-std=c99 -D_DEFAULT_SOURCE")
+
 ENABLE_WARNINGS(all)
 ENABLE_WARNINGS(extra)
 ENABLE_WARNINGS(documentation)
