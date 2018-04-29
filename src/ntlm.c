@@ -803,12 +803,14 @@ int ntlm_client_set_challenge(
 
 	/* validate data section */
 	if ((name_offset && name_offset < challenge.pos) ||
+		challenge.len < name_len ||
 		(challenge.len - name_len) < name_offset) {
 		ntlm_client_set_errmsg(ntlm,
 			"invalid message; invalid target name buffer");
 		return -1;
 	}
 	if ((info_offset && info_offset < challenge.pos) ||
+		challenge.len < info_len ||
 		(challenge.len - info_len) < info_offset) {
 		ntlm_client_set_errmsg(ntlm,
 			"invalid message; invalid target info buffer");
