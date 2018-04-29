@@ -115,14 +115,16 @@ void test_unicode__utf16to8_convers_nul(void)
 
 void test_unicode__utf8to16_accepts_null(void)
 {
-	assert_utf8_to_16(ctx, "", NULL, 0);
+	char str[] = { 0, 0 };
+
+	assert_utf8_to_16(ctx, str, NULL, 0);
 }
 
 void test_unicode__utf8to16_zero_length_string(void)
 {
 	char str[] = { 0, 0 };
 
-	assert_utf8_to_16(ctx, "", str, 0);
+	assert_utf8_to_16(ctx, str, "", 0);
 }
 
 void test_unicode__utf8to16_simple(void)
