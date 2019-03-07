@@ -1,3 +1,10 @@
+/*
+ * Copyright (c) Edward Thomson.  All rights reserved.
+ *
+ * This file is part of ntlmclient, distributed under the MIT license.
+ * For full terms and copyright information, and for third-party
+ * copyright information, see the included LICENSE.txt file.
+ */
 #ifndef INCLUDE_NTLMCLIENT_H__
 #define INCLUDE_NTLMCLIENT_H__
 
@@ -83,11 +90,11 @@ typedef enum {
 
 
 /** Declare a public function exported for application use. */
-#if __GNUC__ >= 4
+#if __GNUC__ >= 4 && !defined(NTLM_STATIC)
 # define NTLM_EXTERN(type) extern \
              __attribute__((visibility("default"))) \
              type
-#elif defined(_MSC_VER)
+#elif defined(_MSC_VER) && !defined(NTLM_STATIC)
 # define NTLM_EXTERN(type) __declspec(dllexport) type
 #else
 # define NTLM_EXTERN(type) extern type
