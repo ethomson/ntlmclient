@@ -150,10 +150,12 @@ static void free_credentials(ntlm_client *ntlm)
 	free(ntlm->password_utf16);
 
 	ntlm->username = NULL;
+	ntlm->username_upper = NULL;
 	ntlm->userdomain = NULL;
 	ntlm->password = NULL;
 
 	ntlm->username_utf16 = NULL;
+	ntlm->username_upper_utf16 = NULL;
 	ntlm->userdomain_utf16 = NULL;
 	ntlm->password_utf16 = NULL;
 }
@@ -1365,6 +1367,10 @@ int ntlm_client_response(
 
 void ntlm_client_reset(ntlm_client *ntlm)
 {
+	ntlm_client_flags flags;
+	ntlm_hmac_ctx *hmac_ctx;
+	ntlm_unicode_ctx *unicode_ctx;
+
 	assert(ntlm);
 
 	free(ntlm->negotiate.buf);
@@ -1386,6 +1392,16 @@ void ntlm_client_reset(ntlm_client *ntlm)
 	free(ntlm->ntlm2_response);
 
 	free_credentials(ntlm);
+
+	flags = ntlm->flags;
+	hmac_ctx = ntlm->hmac_ctx;
+	unicode_ctx = ntlm->unicode_ctx;
+
+	memset(ntlm, 0, sizeof(struct ntlm_client));
+
+	ntlm->flags = flags;
+	ntlm->hmac_ctx = hmac_ctx;
+	ntlm->unicode_ctx = unicode_ctx;
 }
 
 void ntlm_client_free(ntlm_client *ntlm)
