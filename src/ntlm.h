@@ -122,6 +122,7 @@ typedef enum {
 } ntlm_client_internal_flags;
 
 typedef enum {
+	NTLM_TARGET_INFO_END = 0,
 	NTLM_TARGET_INFO_SERVER = 1,
 	NTLM_TARGET_INFO_DOMAIN = 2,
 	NTLM_TARGET_INFO_SERVER_DNS = 3,

@@ -527,15 +527,15 @@ static inline bool read_target_info(
 	ntlm_buf *message,
 	bool unicode)
 {
-	char **out;
 	uint16_t block_type, block_len;
+	bool done = false;
 
 	*server_out = NULL;
 	*domain_out = NULL;
 	*server_dns_out = NULL;
 	*domain_dns_out = NULL;
 
-	while ((message->len - message->pos) >= 4) {
+	while (!done && (message->len - message->pos) >= 4) {
 		if (!read_int16(&block_type, ntlm, message) ||
 			!read_int16(&block_len, ntlm, message)) {
 			ntlm_client_set_errmsg(ntlm, "truncated target info block");
@@ -545,30 +545,32 @@ static inline bool read_target_info(
 		if (!block_type && block_len) {
 			ntlm_client_set_errmsg(ntlm, "invalid target info block");
 			return -1;
-		} else if (!block_type) {
-			break;
 		}
 
 		switch (block_type) {
 		case NTLM_TARGET_INFO_DOMAIN:
-			out = domain_out;
+			if (!read_string(domain_out, ntlm, message, block_len, unicode))
+				return -1;
 			break;
 		case NTLM_TARGET_INFO_SERVER:
-			out = server_out;
+			if (!read_string(server_out, ntlm, message, block_len, unicode))
+				return -1;
 			break;
 		case NTLM_TARGET_INFO_DOMAIN_DNS:
-			out = domain_dns_out;
+			if (!read_string(domain_dns_out, ntlm, message, block_len, unicode))
+				return -1;
 			break;
 		case NTLM_TARGET_INFO_SERVER_DNS:
-			out = server_dns_out;
+			if (!read_string(server_dns_out, ntlm, message, block_len, unicode))
+				return -1;
+			break;
+		case NTLM_TARGET_INFO_END:
+			done = true;
 			break;
 		default:
 			ntlm_client_set_errmsg(ntlm, "unknown target info block type");
 			return -1;
 		}
-
-		if (!read_string(out, ntlm, message, block_len, unicode))
-			return -1;
 	}
 
 	if (message->len != message->pos) {
