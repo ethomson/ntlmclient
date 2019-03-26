@@ -24,7 +24,7 @@ bool ntlm_random_bytes(
 {
 	mbedtls_ctr_drbg_context ctr_drbg;
 	mbedtls_entropy_context entropy;
-	bool ret;
+	bool ret = true;
 
 	const unsigned char personalization[] = {
 		0xec, 0xb5, 0xd1, 0x0b, 0x8f, 0x15, 0x1f, 0xc2,
@@ -36,19 +36,17 @@ bool ntlm_random_bytes(
 	mbedtls_ctr_drbg_init(&ctr_drbg);
 	mbedtls_entropy_init(&entropy);
 
-	ret = !!mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func,
-		&entropy, personalization, sizeof(personalization)) &&
-		!!mbedtls_ctr_drbg_random(&ctr_drbg, out, len);
+	if (mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func,
+		&entropy, personalization, sizeof(personalization)) ||
+		mbedtls_ctr_drbg_random(&ctr_drbg, out, len)) {
+		ntlm_client_set_errmsg(ntlm, "random generation failed");
+		ret = false;
+	}
 
 	mbedtls_entropy_free(&entropy);
 	mbedtls_ctr_drbg_free(&ctr_drbg);
 
-	if (!ret) {
-		ntlm_client_set_errmsg(ntlm, "random generation failed");
-		return false;
-	}
-
-	return true;
+	return ret;
 }
 
 bool ntlm_des_encrypt(
