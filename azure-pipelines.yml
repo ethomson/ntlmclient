@@ -64,4 +64,7 @@ jobs:
     vmImage: 'macOS 10.13'
   steps:
   - template: azure-pipelines/bash.yml
+    parameters:
+      environmentVariables:
+        LEAK_CHECK: leaks
 
