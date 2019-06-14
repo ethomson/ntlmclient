@@ -16,7 +16,7 @@ jobs:
       imageName: 'libgit2/trusty-amd64:latest'
       environmentVariables: |
        CC=gcc
-       CMAKE_OPTIONS=-DCRYPT=openssl
+       CMAKE_OPTIONS=-DCRYPT=openssl -DUNICODE=builtin
        LEAK_CHECK=valgrind
 
 - job: linux_amd64_trusty_gcc_mbedtls
@@ -29,7 +29,7 @@ jobs:
       imageName: 'libgit2/trusty-amd64:latest'
       environmentVariables: |
        CC=gcc
-       CMAKE_OPTIONS=-DCRYPT=mbedtls
+       CMAKE_OPTIONS=-DCRYPT=mbedtls -DUNICODE=iconv
        LEAK_CHECK=valgrind
 
 - job: linux_amd64_trusty_clang_openssl
@@ -42,7 +42,7 @@ jobs:
       imageName: 'libgit2/trusty-amd64:latest'
       environmentVariables: |
        CC=clang
-       CMAKE_OPTIONS=-DCRYPT=openssl
+       CMAKE_OPTIONS=-DCRYPT=openssl -DUNICODE=iconv
        LEAK_CHECK=valgrind
 
 - job: linux_amd64_trusty_clang_mbedtls
@@ -55,8 +55,62 @@ jobs:
       imageName: 'libgit2/trusty-amd64:latest'
       environmentVariables: |
        CC=clang
-       CMAKE_OPTIONS=-DCRYPT=mbedtls
+       CMAKE_OPTIONS=-DCRYPT=mbedtls -DUNICODE=builtin
        LEAK_CHECK=valgrind
+
+- job: linux_x86_bionic_gcc_openssl
+  displayName: 'Linux (x86; Bionic; GCC; OpenSSL)'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  steps:
+  - template: azure-pipelines/docker.yml
+    parameters:
+      qemu: 'true'
+      imageName: 'libgit2/bionic-x86:latest'
+      environmentVariables: |
+       CC=gcc
+       CMAKE_OPTIONS=-DCRYPT=openssl -DUNICODE=builtin
+       LEAK_CHECK=valgrind
+
+- job: linux_x86_bionic_clang_openssl
+  displayName: 'Linux (x86; Bionic; Clang; OpenSSL)'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  steps:
+  - template: azure-pipelines/docker.yml
+    parameters:
+      qemu: 'true'
+      imageName: 'libgit2/bionic-x86:latest'
+      environmentVariables: |
+       CC=clang
+       CMAKE_OPTIONS=-DCRYPT=openssl
+       LEAK_CHECK=valgrind
+
+- job: linux_arm32_bionic_gcc_openssl
+  displayName: 'Linux (arm32; Bionic; GCC; OpenSSL)'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  steps:
+  - template: azure-pipelines/docker.yml
+    parameters:
+      qemu: 'true'
+      imageName: 'libgit2/bionic-arm32:latest'
+      environmentVariables: |
+       CC=gcc
+       CMAKE_OPTIONS=-DCRYPT=openssl -DUNICODE=builtin
+
+- job: linux_arm64_bionic_gcc_openssl
+  displayName: 'Linux (arm64; Bionic; GCC; OpenSSL)'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  steps:
+  - template: azure-pipelines/docker.yml
+    parameters:
+      qemu: 'true'
+      imageName: 'libgit2/bionic-arm64:latest'
+      environmentVariables: |
+       CC=gcc
+       CMAKE_OPTIONS=-DCRYPT=openssl -DUNICODE=builtin
 
 - job: macos
   displayName: 'macOS'

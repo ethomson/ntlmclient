@@ -6,6 +6,8 @@ SOURCE_DIR=${SOURCE_DIR:-$( cd "$( dirname "${BASH_SOURCE[0]}" )" && dirname $( 
 BUILD_DIR=$(pwd)
 CC=${CC:-cc}
 
+indent() { sed "s/^/    /"; }
+
 echo "Source directory: ${SOURCE_DIR}"
 echo "Build directory:  ${BUILD_DIR}"
 echo ""
