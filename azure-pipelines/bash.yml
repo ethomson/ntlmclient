@@ -1,0 +1,16 @@
+steps:
+- bash: . '$(Build.SourcesDirectory)/ci/build.sh'
+  displayName: Build and Test
+  workingDirectory: '$(Build.BinariesDirectory)'
+  env: ${{ parameters.environmentVariables }}
+- bash: . '$(Build.SourcesDirectory)/ci/test.sh'
+  displayName: Test
+  workingDirectory: '$(Build.BinariesDirectory)'
+  env: ${{ parameters.environmentVariables }}
+- task: PublishTestResults@2
+  displayName: Publish Test Results
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFiles: 'results_*.xml'
+    searchFolder: '$(Build.BinariesDirectory)'
+    mergeTestResults: true

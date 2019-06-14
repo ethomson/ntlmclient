@@ -1,0 +1,67 @@
+resources:
+- repo: self
+
+trigger:
+- master
+- maint/*
+
+jobs:
+- job: linux_amd64_trusty_gcc_openssl
+  displayName: 'Linux (amd64; Trusty; GCC; OpenSSL)'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  steps:
+  - template: azure-pipelines/docker.yml
+    parameters:
+      imageName: 'libgit2/trusty-amd64:latest'
+      environmentVariables: |
+       CC=gcc
+       CMAKE_OPTIONS=-DCRYPT=openssl
+       LEAK_CHECK=valgrind
+
+- job: linux_amd64_trusty_gcc_mbedtls
+  displayName: 'Linux (amd64; Trusty; GCC; mbedTLS)'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  steps:
+  - template: azure-pipelines/docker.yml
+    parameters:
+      imageName: 'libgit2/trusty-amd64:latest'
+      environmentVariables: |
+       CC=gcc
+       CMAKE_OPTIONS=-DCRYPT=mbedtls
+       LEAK_CHECK=valgrind
+
+- job: linux_amd64_trusty_clang_openssl
+  displayName: 'Linux (amd64; Trusty; Clang; OpenSSL)'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  steps:
+  - template: azure-pipelines/docker.yml
+    parameters:
+      imageName: 'libgit2/trusty-amd64:latest'
+      environmentVariables: |
+       CC=clang
+       CMAKE_OPTIONS=-DCRYPT=openssl
+       LEAK_CHECK=valgrind
+
+- job: linux_amd64_trusty_clang_mbedtls
+  displayName: 'Linux (amd64; Trusty; Clang; mbedTLS)'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  steps:
+  - template: azure-pipelines/docker.yml
+    parameters:
+      imageName: 'libgit2/trusty-amd64:latest'
+      environmentVariables: |
+       CC=clang
+       CMAKE_OPTIONS=-DCRYPT=mbedtls
+       LEAK_CHECK=valgrind
+
+- job: macos
+  displayName: 'macOS'
+  pool:
+    vmImage: 'macOS 10.13'
+  steps:
+  - template: azure-pipelines/bash.yml
+
