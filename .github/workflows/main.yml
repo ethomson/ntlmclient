@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        config:
+          # Linux (amd64, Trusty, GCC, OpenSSL)
+          - platform: 'ubuntu-latest'
+            container: 'libgit2/trusty-amd64:latest'
+            env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
+
+          # Linux (amd64, Trusty, GCC, mbedTLS)
+          - platform: 'ubuntu-latest'
+            container: 'libgit2/trusty-amd64:latest'
+            env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=mbedtls -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
+
+          # Linux (amd64, Trusty, Clang, OpenSSL)
+          - platform: 'ubuntu-latest'
+            container: 'libgit2/trusty-amd64:latest'
+            env: { CC: 'clang', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
+
+          # Linux (amd64, Trusty, Clang, mbedTLS)
+          - platform: 'ubuntu-latest'
+            container: 'libgit2/trusty-amd64:latest'
+            env: { CC: 'clang', CMAKE_OPTIONS: '-DCRYPT=mbedtls -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
+
+          # Linux (x86, Bionic, gcc, OpenSSL)
+          - platform: 'ubuntu-latest'
+            container: 'libgit2/bionic-x86:latest'
+            qemu: true
+            env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
+
+          # Linux (x86, Bionic, clang, OpenSSL)
+          - platform: 'ubuntu-latest'
+            container: 'libgit2/bionic-x86:latest'
+            qemu: true
+            env: { CC: 'clang', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
+
+          # Linux (arm32, Bionic, gcc, OpenSSL)
+          - platform: 'ubuntu-latest'
+            container: 'libgit2/bionic-arm32:latest'
+            qemu: true
+            env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin' }
+
+          # Linux (arm64, Bionic, gcc, OpenSSL)
+          - platform: 'ubuntu-latest'
+            container: 'libgit2/bionic-arm64:latest'
+            qemu: true
+            env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin' }
+
+          # macOS
+          - platform: 'macos-latest'
+            container: ''
+            env: { LEAK_CHECK: 'leaks' }
+      fail-fast: false
+
+    runs-on: ${{ matrix.config.platform }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up build environment
+      run: docker run --rm --privileged multiarch/qemu-user-static:register --reset
+      if: matrix.config.qemu == true
+    - name: Build and test
+      run: |
+        if [ -n "${{ matrix.config.container }}" ]; then
+          docker run -v $(pwd):/src -w /src -e CC -e CMAKE_GENERATOR -e CMAKE_OPTIONS -e PKG_CONFIG_PATH -e SKIP_SSH_TESTS -e SKIP_NEGOTIATE_TESTS ${{ matrix.config.container }} /bin/bash -c "mkdir build && cd build && ../ci/build.sh && ../ci/test.sh"
+        else
+          mkdir build && cd build
+          ../ci/build.sh
+          ../ci/test.sh
+        fi
