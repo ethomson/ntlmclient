@@ -1,6 +1,6 @@
 ntlmclient
 ==========
-[![Travis Build Status](https://secure.travis-ci.org/ethomson/ntlmclient.svg?branch=master)](http://travis-ci.org/ethomson/ntlmclient) ![Coverity Build Status](https://scan.coverity.com/projects/15510/badge.svg?flat=1)
+![CI](https://github.com/ethomson/ntlmclient/workflows/CI/badge.svg) ![Coverity Build Status](https://scan.coverity.com/projects/15510/badge.svg?flat=1)
 
 ntlmclient is a pure C library that supports NTLM2 authentication for
 POSIX systems.  It is generally used to support authentication to
