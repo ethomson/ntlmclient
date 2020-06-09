@@ -85,6 +85,9 @@ IF(CRYPT STREQUAL "commoncrypto")
 	ADD_DEFINITIONS(-DCRYPT_COMMONCRYPTO)
 	FILE(GLOB NTLM_SRC_CRYPT "${PATH_SRC}/crypt_commoncrypto.c")
 
+	# CC_MD4 has been deprecated in macOS 10.15.
+	SET_SOURCE_FILES_PROPERTIES("${PATH_SRC}/crypt_commoncrypto.c" COMPILE_FLAGS "-Wno-deprecated")
+
 	ADD_FEATURE_INFO(CRYPT ON "using macOS CommonCrypto support")
 ELSEIF(CRYPT STREQUAL "mbedtls")
 	FIND_PACKAGE(mbedTLS)
