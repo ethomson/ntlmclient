@@ -3,6 +3,7 @@
 
 #include "clar.h"
 #include "ntlm.h"
+#include "util.h"
 
 #define cl_ntlm_pass(ntlm, expr) cl_ntlm_expect((ntlm), (expr), 0, __FILE__, __LINE__)
 
