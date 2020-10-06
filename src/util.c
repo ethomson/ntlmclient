@@ -8,6 +8,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <arpa/inet.h>
 
 #include "compat.h"
 #include "util.h"
@@ -18,4 +19,17 @@ void ntlm_memzero(void *data, size_t size)
 
 	while (size--)
 		*scan++ = 0x0;
+}
+
+uint64_t ntlm_htonll(uint64_t value)
+{
+	static union {
+		uint32_t i;
+		char c[8];
+	} test = { 0x01020304 };
+
+	if (test.c[0] == 0x01)
+		return value;
+	else
+		return ((uint64_t)htonl(value) << 32) | htonl((uint64_t)value >> 32);
 }

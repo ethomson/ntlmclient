@@ -88,7 +88,7 @@ void test_challenge__sample(void)
 	cl_ntlm_pass(ntlm, ntlm_client_set_challenge(ntlm,
 			challenge_msg, sizeof(challenge_msg)));
 
-	cl_assert_equal_i(htonll(0x0123456789abcdef),
+	cl_assert_equal_i(ntlm_htonll(0x0123456789abcdef),
 		ntlm_client_challenge_nonce(ntlm));
 
 	cl_assert_equal_s("DOMAIN", ntlm_client_target(ntlm));
