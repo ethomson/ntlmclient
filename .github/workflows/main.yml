@@ -69,6 +69,7 @@ jobs:
       run: docker run --rm --privileged multiarch/qemu-user-static:register --reset
       if: matrix.config.qemu == true
     - name: Build and test
+      env: ${{ matrix.config.env }}
       run: |
         if [ -n "${{ matrix.config.container }}" ]; then
           docker run -v $(pwd):/src -w /src -e CC -e CMAKE_GENERATOR -e CMAKE_OPTIONS -e PKG_CONFIG_PATH -e SKIP_SSH_TESTS -e SKIP_NEGOTIATE_TESTS ${{ matrix.config.container }} /bin/bash -c "mkdir build && cd build && ../ci/build.sh && ../ci/test.sh"
