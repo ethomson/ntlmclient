@@ -134,10 +134,10 @@ int ntlm_client_set_hostname(
 static void free_credentials(ntlm_client *ntlm)
 {
 	if (ntlm->password)
-		memzero(ntlm->password, strlen(ntlm->password));
+		ntlm_memzero(ntlm->password, strlen(ntlm->password));
 
 	if (ntlm->password_utf16)
-		memzero(ntlm->password_utf16, ntlm->password_utf16_len);
+		ntlm_memzero(ntlm->password_utf16, ntlm->password_utf16_len);
 
 	free(ntlm->username);
 	free(ntlm->username_upper);

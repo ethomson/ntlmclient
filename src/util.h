@@ -9,6 +9,6 @@
 #ifndef PRIVATE_UTIL_H__
 #define PRIVATE_UTIL_H__
 
-extern void memzero(void *data, size_t size);
+extern void ntlm_memzero(void *data, size_t size);
 
 #endif /* PRIVATE_UTIL_H__ */

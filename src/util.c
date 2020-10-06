@@ -12,7 +12,7 @@
 #include "compat.h"
 #include "util.h"
 
-void memzero(void *data, size_t size)
+void ntlm_memzero(void *data, size_t size)
 {
 	volatile uint8_t *scan = (volatile uint8_t *)data;
 
