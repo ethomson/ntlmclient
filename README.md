@@ -1,6 +1,6 @@
 ntlmclient
 ==========
-![CI](https://github.com/ethomson/ntlmclient/workflows/CI/badge.svg) ![Coverity Build Status](https://scan.coverity.com/projects/15510/badge.svg?flat=1)
+[![CI](https://github.com/ethomson/ntlmclient/workflows/CI/badge.svg)](https://github.com/ethomson/ntlmclient/actions?query=workflow%3ACI) [![Coverity Build Status](https://scan.coverity.com/projects/15510/badge.svg?flat=1)](https://scan.coverity.com/projects/15510)
 
 ntlmclient is a pure C library that supports NTLM2 authentication for
 POSIX systems.  It is generally used to support authentication to
@@ -74,7 +74,7 @@ usage example is:
    accept the defaults.
 
 
-   ```
+   ```c
    ntlm_client *ntlm;
 
    /* Create an NTLM client context, using the default options.  This
@@ -93,7 +93,7 @@ usage example is:
 
    (Functions return `0` on success and non-zero on error.)
 
-   ```
+   ```c
    if (ntlm_client_set_hostname(ntlm, "hostname", "DOMAIN") != 0 ||
        ntlm_client_set_credentials(ntlm, "user", "DOMAIN", "secret") != 0) {
        ntlm_client_set_target(ntlm, "SERVER") != 0) {
@@ -105,7 +105,7 @@ usage example is:
 
 3. Compute the negotiate message and deliver it to the server.
 
-   ```
+   ```c
    const unsigned char *negotiate_msg;
    size_t negotiate_len;
 
@@ -119,7 +119,7 @@ usage example is:
 
 4. Read the challenge message from the server, provide it to the library.
 
-   ```
+   ```c
    /*
     * Read the NTLM challenge message from the remote host.  For HTTP,
     * this will be in the `Authorization` header, following the SPNEGO
