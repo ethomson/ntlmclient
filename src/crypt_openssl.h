@@ -21,7 +21,7 @@
 
 #ifdef CRYPT_OPENSSL_DYNAMIC
 typedef unsigned char DES_cblock[8];
-typedef const unsigned char const_DES_cblock[8];
+typedef unsigned char const_DES_cblock[8];
 
 typedef unsigned long DES_LONG;
 
