@@ -19,7 +19,7 @@ OPTION(ENABLE_ASAN   "Enable AddressSanitizer" OFF)
 OPTION(ENABLE_WERROR "Treat warnings as errors" ON)
 
 SET(UNICODE "default" CACHE STRING "Unicode implementation to use; may be 'iconv' or 'builtin'.")
-SET(CRYPT   "default" CACHE STRING "Cryptographic implementation to use; may be 'commoncrypto', 'mbedtls' or 'openssl'.")
+SET(CRYPT   "default" CACHE STRING "Cryptographic implementation to use; may be 'commoncrypto', 'mbedtls', 'openssl', or 'openssl-dynamic'.")
 
 SET(PATH_SRC     "${NTLM_SOURCE_DIR}/src")
 SET(PATH_INCLUDE "${NTLM_SOURCE_DIR}/include")
@@ -119,6 +119,15 @@ ELSEIF(CRYPT STREQUAL "openssl")
 	LIST(APPEND NTLM_PC_LIBS ${OPENSSL_LIBRARIES})
 
 	ADD_FEATURE_INFO(CRYPT ON "using OpenSSL")
+ELSEIF(CRYPT STREQUAL "openssl-dynamic")
+	ADD_DEFINITIONS(-DCRYPT_OPENSSL)
+	ADD_DEFINITIONS(-DCRYPT_OPENSSL_DYNAMIC)
+	FILE(GLOB NTLM_SRC_CRYPT "${PATH_SRC}/crypt_openssl.c")
+
+	LIST(APPEND NTLM_LIBS "dl")
+	LIST(APPEND NTLM_LIBS "pthread")
+
+	ADD_FEATURE_INFO(CRYPT ON "using OpenSSL (dynamic)")
 ELSE()
 	MESSAGE(FATAL_ERROR "invalid cryptographic support requested: ${CRYPT}")
 ENDIF()
