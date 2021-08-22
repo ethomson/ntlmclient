@@ -21,8 +21,8 @@
 #include "crypt.h"
 
 bool ntlm_random_bytes(
-	ntlm_client *ntlm,
 	unsigned char *out,
+	ntlm_client *ntlm,
 	size_t len)
 {
 	int rc = RAND_bytes(out, len);
@@ -37,10 +37,13 @@ bool ntlm_random_bytes(
 
 bool ntlm_des_encrypt(
 	ntlm_des_block *out,
+	ntlm_client *ntlm,
 	ntlm_des_block *plaintext,
 	ntlm_des_block *key)
 {
 	DES_key_schedule keysched;
+
+	NTLM_UNUSED(ntlm);
 
 	memset(out, 0, sizeof(ntlm_des_block));
 
@@ -52,9 +55,11 @@ bool ntlm_des_encrypt(
 
 bool ntlm_md4_digest(
 	unsigned char out[CRYPT_MD4_DIGESTSIZE],
+	ntlm_client *ntlm,
 	const unsigned char *in,
 	size_t in_len)
 {
+	NTLM_UNUSED(ntlm);
 	MD4(in, in_len, out);
 	return true;
 }
@@ -81,8 +86,9 @@ static inline HMAC_CTX *HMAC_CTX_new(void)
 }
 #endif
 
-ntlm_hmac_ctx *ntlm_hmac_ctx_init(void)
+ntlm_hmac_ctx *ntlm_hmac_ctx_init(ntlm_client *ntlm)
 {
+	NTLM_UNUSED(ntlm);
 	return HMAC_CTX_new();
 }
 

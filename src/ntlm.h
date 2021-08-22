@@ -69,7 +69,7 @@ struct ntlm_client {
 	ntlm_state state;
 
 	/* crypto contexts */
-	ntlm_hmac_ctx *hmac_ctx;
+	ntlm_crypt_ctx crypt_ctx;
 	ntlm_unicode_ctx unicode_ctx;
 
 	/* error message as set by the library */

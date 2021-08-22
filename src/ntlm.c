@@ -52,9 +52,8 @@ ntlm_client *ntlm_client_init(ntlm_client_flags flags)
 
 	ntlm->flags = flags;
 
-	if ((ntlm->hmac_ctx = ntlm_hmac_ctx_init()) == NULL ||
-	    ntlm_unicode_init(ntlm) < 0) {
-		ntlm_hmac_ctx_free(ntlm->hmac_ctx);
+	if (ntlm_crypt_init(ntlm) < 0 || ntlm_unicode_init(ntlm) < 0) {
+		ntlm_crypt_shutdown(ntlm);
 		ntlm_unicode_shutdown(ntlm);
 		free(ntlm);
 		return NULL;
@@ -939,6 +938,7 @@ static void des_key_from_password(
 
 static inline bool generate_lm_hash(
 	ntlm_des_block out[2],
+	ntlm_client *ntlm,
 	const char *password)
 {
 	/* LM encrypts this known plaintext using the password as a key */
@@ -967,8 +967,8 @@ static inline bool generate_lm_hash(
 	des_key_from_password(&key1, keystr1, keystr1_len);
 	des_key_from_password(&key2, keystr2, keystr2_len);
 
-	return ntlm_des_encrypt(&out[0], &plaintext, &key1) &&
-		ntlm_des_encrypt(&out[1], &plaintext, &key2);
+	return ntlm_des_encrypt(&out[0], ntlm, &plaintext, &key1) &&
+		ntlm_des_encrypt(&out[1], ntlm, &plaintext, &key2);
 }
 
 static void des_keys_from_lm_hash(ntlm_des_block out[3], ntlm_des_block lm_hash[2])
@@ -993,16 +993,16 @@ static bool generate_lm_response(ntlm_client *ntlm)
 	ntlm_des_block *challenge = (ntlm_des_block *)&ntlm->challenge.nonce;
 
 	/* Generate the LM hash from the password */
-	if (!generate_lm_hash(lm_hash, ntlm->password))
+	if (!generate_lm_hash(lm_hash, ntlm, ntlm->password))
 		return false;
 
 	/* Convert that LM hash to three DES keys */
 	des_keys_from_lm_hash(key, lm_hash);
 
 	/* Finally, encrypt the challenge with each of these keys */
-	if (!ntlm_des_encrypt(&lm_response[0], challenge, &key[0]) ||
-		!ntlm_des_encrypt(&lm_response[1], challenge, &key[1]) ||
-		!ntlm_des_encrypt(&lm_response[2], challenge, &key[2]))
+	if (!ntlm_des_encrypt(&lm_response[0], ntlm, challenge, &key[0]) ||
+		!ntlm_des_encrypt(&lm_response[1], ntlm, challenge, &key[1]) ||
+		!ntlm_des_encrypt(&lm_response[2], ntlm, challenge, &key[2]))
 		return false;
 
 	memcpy(&ntlm->lm_response[0], lm_response[0], 8);
@@ -1027,6 +1027,7 @@ static bool generate_ntlm_hash(
 		return false;
 
 	return ntlm_md4_digest(out,
+		ntlm,
 		(const unsigned char *)ntlm->password_utf16,
 		ntlm->password_utf16_len);
 }
@@ -1047,9 +1048,9 @@ static bool generate_ntlm_response(ntlm_client *ntlm)
 	des_key_from_password(&key[2], &ntlm_hash[14], 2);
 
 	/* Finally, encrypt the challenge with each of these keys */
-	if (!ntlm_des_encrypt(&ntlm_response[0], challenge, &key[0]) ||
-		!ntlm_des_encrypt(&ntlm_response[1], challenge, &key[1]) ||
-		!ntlm_des_encrypt(&ntlm_response[2], challenge, &key[2]))
+	if (!ntlm_des_encrypt(&ntlm_response[0], ntlm, challenge, &key[0]) ||
+		!ntlm_des_encrypt(&ntlm_response[1], ntlm, challenge, &key[1]) ||
+		!ntlm_des_encrypt(&ntlm_response[2], ntlm, challenge, &key[2]))
 		return false;
 
 	memcpy(&ntlm->ntlm_response[0], ntlm_response[0], 8);
@@ -1080,11 +1081,10 @@ static bool generate_ntlm2_hash(
 		target_len = ntlm->target_utf16_len;
 	}
 
-	if (!ntlm_hmac_ctx_reset(ntlm->hmac_ctx) ||
-		!ntlm_hmac_md5_init(ntlm->hmac_ctx, ntlm_hash, sizeof(ntlm_hash)) ||
-		!ntlm_hmac_md5_update(ntlm->hmac_ctx, username, username_len) ||
-		!ntlm_hmac_md5_update(ntlm->hmac_ctx, target, target_len) ||
-		!ntlm_hmac_md5_final(out, &out_len, ntlm->hmac_ctx)) {
+	if (!ntlm_hmac_md5_init(ntlm, ntlm_hash, sizeof(ntlm_hash)) ||
+		!ntlm_hmac_md5_update(ntlm, username, username_len) ||
+		!ntlm_hmac_md5_update(ntlm, target, target_len) ||
+		!ntlm_hmac_md5_final(out, &out_len, ntlm)) {
 		ntlm_client_set_errmsg(ntlm, "failed to create HMAC-MD5");
 		return false;
 	}
@@ -1102,13 +1102,10 @@ static bool generate_ntlm2_challengehash(
 {
 	size_t out_len = 16;
 
-	if (!ntlm_hmac_ctx_reset(ntlm->hmac_ctx) ||
-		!ntlm_hmac_md5_init(ntlm->hmac_ctx,
-			ntlm2_hash, NTLM_NTLM2_HASH_LEN) ||
-		!ntlm_hmac_md5_update(ntlm->hmac_ctx,
-			(const unsigned char *)&ntlm->challenge.nonce, 8) ||
-		!ntlm_hmac_md5_update(ntlm->hmac_ctx, blob, blob_len) ||
-		!ntlm_hmac_md5_final(out, &out_len, ntlm->hmac_ctx)) {
+	if (!ntlm_hmac_md5_init(ntlm, ntlm2_hash, NTLM_NTLM2_HASH_LEN) ||
+		!ntlm_hmac_md5_update(ntlm, (const unsigned char *)&ntlm->challenge.nonce, 8) ||
+		!ntlm_hmac_md5_update(ntlm, blob, blob_len) ||
+		!ntlm_hmac_md5_final(out, &out_len, ntlm)) {
 		ntlm_client_set_errmsg(ntlm, "failed to create HMAC-MD5");
 		return false;
 	}
@@ -1126,14 +1123,10 @@ static bool generate_lm2_response(ntlm_client *ntlm,
 
 	local_nonce = ntlm_htonll(ntlm->nonce);
 
-	if (!ntlm_hmac_ctx_reset(ntlm->hmac_ctx) ||
-		!ntlm_hmac_md5_init(ntlm->hmac_ctx,
-			ntlm2_hash, NTLM_NTLM2_HASH_LEN) ||
-		!ntlm_hmac_md5_update(ntlm->hmac_ctx,
-			(const unsigned char *)&ntlm->challenge.nonce, 8) ||
-		!ntlm_hmac_md5_update(ntlm->hmac_ctx,
-			(const unsigned char *)&local_nonce, 8) ||
-		!ntlm_hmac_md5_final(lm2_challengehash, &lm2_len, ntlm->hmac_ctx)) {
+	if (!ntlm_hmac_md5_init(ntlm, ntlm2_hash, NTLM_NTLM2_HASH_LEN) ||
+		!ntlm_hmac_md5_update(ntlm, (const unsigned char *)&ntlm->challenge.nonce, 8) ||
+		!ntlm_hmac_md5_update(ntlm, (const unsigned char *)&local_nonce, 8) ||
+		!ntlm_hmac_md5_final(lm2_challengehash, &lm2_len, ntlm)) {
 		ntlm_client_set_errmsg(ntlm, "failed to create HMAC-MD5");
 		return false;
 	}
@@ -1162,7 +1155,7 @@ static bool generate_nonce(ntlm_client *ntlm)
 	if (ntlm->nonce)
 		return true;
 
-	if (!ntlm_random_bytes(ntlm, buf, 8))
+	if (!ntlm_random_bytes(buf, ntlm, 8))
 		return false;
 
 	memcpy(&ntlm->nonce, buf, sizeof(uint64_t));
@@ -1417,7 +1410,7 @@ void ntlm_client_free(ntlm_client *ntlm)
 
 	ntlm_client_reset(ntlm);
 
-	ntlm_hmac_ctx_free(ntlm->hmac_ctx);
+	ntlm_crypt_shutdown(ntlm);
 	ntlm_unicode_shutdown(ntlm);
 
 	free(ntlm);

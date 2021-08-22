@@ -18,8 +18,8 @@
 #include "crypt.h"
 
 bool ntlm_random_bytes(
-	ntlm_client *ntlm,
 	unsigned char *out,
+	ntlm_client *ntlm,
 	size_t len)
 {
 	mbedtls_ctr_drbg_context ctr_drbg;
@@ -51,6 +51,7 @@ bool ntlm_random_bytes(
 
 bool ntlm_des_encrypt(
 	ntlm_des_block *out,
+	ntlm_client *ntlm,
 	ntlm_des_block *plaintext,
 	ntlm_des_block *key)
 {
@@ -60,8 +61,10 @@ bool ntlm_des_encrypt(
 	mbedtls_des_init(&ctx);
 
 	if (mbedtls_des_setkey_enc(&ctx, *key) ||
-		mbedtls_des_crypt_ecb(&ctx, *plaintext, *out))
+	    mbedtls_des_crypt_ecb(&ctx, *plaintext, *out)) {
+		ntlm_client_set_errmsg(ntlm, "DES encryption failed");
 		goto done;
+	}
 
 	success = true;
 
@@ -72,10 +75,13 @@ done:
 
 bool ntlm_md4_digest(
 	unsigned char out[CRYPT_MD4_DIGESTSIZE],
+	ntlm_client *ntlm,
 	const unsigned char *in,
 	size_t in_len)
 {
 	mbedtls_md4_context ctx;
+
+	NTLM_UNUSED(ntlm);
 
 	mbedtls_md4_init(&ctx);
 	mbedtls_md4_starts(&ctx);
@@ -86,10 +92,12 @@ bool ntlm_md4_digest(
 	return true;
 }
 
-ntlm_hmac_ctx *ntlm_hmac_ctx_init(void)
+ntlm_hmac_ctx *ntlm_hmac_ctx_init(ntlm_client *ntlm)
 {
 	ntlm_hmac_ctx *ctx;
 	const mbedtls_md_info_t *info = mbedtls_md_info_from_type(MBEDTLS_MD_MD5);
+
+	NTLM_UNUSED(ntlm);
 
 	if ((ctx = calloc(1, sizeof(ntlm_hmac_ctx))) == NULL)
 		return NULL;
