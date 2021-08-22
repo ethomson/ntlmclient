@@ -53,9 +53,9 @@ ntlm_client *ntlm_client_init(ntlm_client_flags flags)
 	ntlm->flags = flags;
 
 	if ((ntlm->hmac_ctx = ntlm_hmac_ctx_init()) == NULL ||
-		(ntlm->unicode_ctx = ntlm_unicode_ctx_init(ntlm)) == NULL) {
+	    ntlm_unicode_init(ntlm) < 0) {
 		ntlm_hmac_ctx_free(ntlm->hmac_ctx);
-		ntlm_unicode_ctx_free(ntlm->unicode_ctx);
+		ntlm_unicode_shutdown(ntlm);
 		free(ntlm);
 		return NULL;
 	}
@@ -93,6 +93,16 @@ int ntlm_client_set_version(
 	return 0;
 }
 
+#define reset(ptr) do { free(ptr); ptr = NULL; } while(0)
+
+static void free_hostname(ntlm_client *ntlm)
+{
+	reset(ntlm->hostname);
+	reset(ntlm->hostdomain);
+	reset(ntlm->hostname_utf16);
+	ntlm->hostname_utf16_len = 0;
+}
+
 int ntlm_client_set_hostname(
 	ntlm_client *ntlm,
 	const char *hostname,
@@ -100,13 +110,7 @@ int ntlm_client_set_hostname(
 {
 	assert(ntlm);
 
-	free(ntlm->hostname);
-	free(ntlm->hostdomain);
-	free(ntlm->hostname_utf16);
-
-	ntlm->hostname = NULL;
-	ntlm->hostdomain = NULL;
-	ntlm->hostname_utf16 = NULL;
+	free_hostname(ntlm);
 
 	if (hostname && (ntlm->hostname = strdup(hostname)) == NULL) {
 		ntlm_client_set_errmsg(ntlm, "out of memory");
@@ -121,7 +125,7 @@ int ntlm_client_set_hostname(
 	if (hostname && supports_unicode(ntlm) && !ntlm_unicode_utf8_to_16(
 			&ntlm->hostname_utf16,
 			&ntlm->hostname_utf16_len,
-			ntlm->unicode_ctx,
+			ntlm,
 			hostname,
 			strlen(hostname)))
 		return -1;
@@ -137,25 +141,20 @@ static void free_credentials(ntlm_client *ntlm)
 	if (ntlm->password_utf16)
 		ntlm_memzero(ntlm->password_utf16, ntlm->password_utf16_len);
 
-	free(ntlm->username);
-	free(ntlm->username_upper);
-	free(ntlm->userdomain);
-	free(ntlm->password);
+	reset(ntlm->username);
+	reset(ntlm->username_upper);
+	reset(ntlm->userdomain);
+	reset(ntlm->password);
 
-	free(ntlm->username_utf16);
-	free(ntlm->username_upper_utf16);
-	free(ntlm->userdomain_utf16);
-	free(ntlm->password_utf16);
+	reset(ntlm->username_utf16);
+	reset(ntlm->username_upper_utf16);
+	reset(ntlm->userdomain_utf16);
+	reset(ntlm->password_utf16);
 
-	ntlm->username = NULL;
-	ntlm->username_upper = NULL;
-	ntlm->userdomain = NULL;
-	ntlm->password = NULL;
-
-	ntlm->username_utf16 = NULL;
-	ntlm->username_upper_utf16 = NULL;
-	ntlm->userdomain_utf16 = NULL;
-	ntlm->password_utf16 = NULL;
+	ntlm->username_utf16_len = 0;
+	ntlm->username_upper_utf16_len = 0;
+	ntlm->userdomain_utf16_len = 0;
+	ntlm->password_utf16_len = 0;
 }
 
 int ntlm_client_set_credentials(
@@ -185,7 +184,7 @@ int ntlm_client_set_credentials(
 		if (!ntlm_unicode_utf8_to_16(
 				&ntlm->username_utf16,
 				&ntlm->username_utf16_len,
-				ntlm->unicode_ctx,
+				ntlm,
 				ntlm->username,
 				strlen(ntlm->username)))
 			return -1;
@@ -193,7 +192,7 @@ int ntlm_client_set_credentials(
 		if (!ntlm_unicode_utf8_to_16(
 				&ntlm->username_upper_utf16,
 				&ntlm->username_upper_utf16_len,
-				ntlm->unicode_ctx,
+				ntlm,
 				ntlm->username_upper,
 				strlen(ntlm->username_upper)))
 			return -1;
@@ -202,7 +201,7 @@ int ntlm_client_set_credentials(
 	if (domain && supports_unicode(ntlm) && !ntlm_unicode_utf8_to_16(
 			&ntlm->userdomain_utf16,
 			&ntlm->userdomain_utf16_len,
-			ntlm->unicode_ctx,
+			ntlm,
 			ntlm->userdomain,
 			strlen(ntlm->userdomain)))
 		return -1;
@@ -229,7 +228,7 @@ int ntlm_client_set_target(ntlm_client *ntlm, const char *target)
 		if (supports_unicode(ntlm) && !ntlm_unicode_utf8_to_16(
 				&ntlm->target_utf16,
 				&ntlm->target_utf16_len,
-				ntlm->unicode_ctx,
+				ntlm,
 				ntlm->target,
 				strlen(ntlm->target)))
 			return -1;
@@ -475,7 +474,7 @@ static inline bool read_string_unicode(
 	size_t out_len;
 	int ret = ntlm_unicode_utf16_to_8(out,
 		&out_len,
-		ntlm->unicode_ctx,
+		ntlm,
 		(char *)&message->buf[message->pos],
 		string_len);
 
@@ -1022,7 +1021,7 @@ static bool generate_ntlm_hash(
 	if (ntlm->password && !ntlm_unicode_utf8_to_16(
 			&ntlm->password_utf16,
 			&ntlm->password_utf16_len,
-			ntlm->unicode_ctx,
+			ntlm,
 			ntlm->password,
 			strlen(ntlm->password)))
 		return false;
@@ -1368,41 +1367,47 @@ int ntlm_client_response(
 
 void ntlm_client_reset(ntlm_client *ntlm)
 {
-	ntlm_client_flags flags;
-	ntlm_hmac_ctx *hmac_ctx;
-	ntlm_unicode_ctx *unicode_ctx;
-
 	assert(ntlm);
 
-	free(ntlm->negotiate.buf);
+	ntlm->state = NTLM_STATE_NEGOTIATE;
+
+	free_hostname(ntlm);
+
+	memset(&ntlm->host_version, 0, sizeof(ntlm_version));
+
+	reset(ntlm->target);
+	reset(ntlm->target_utf16);
+	ntlm->target_utf16_len = 0;
+
+	free_credentials(ntlm);
+
+	ntlm->nonce = 0;
+	ntlm->timestamp = 0;
+
+	memset(ntlm->lm_response, 0, NTLM_LM_RESPONSE_LEN);
+	ntlm->lm_response_len = 0;
+
+	memset(ntlm->ntlm_response, 0, NTLM_NTLM_RESPONSE_LEN);
+	ntlm->ntlm_response_len = 0;
+
+	reset(ntlm->ntlm2_response);
+	ntlm->ntlm2_response_len = 0;
+
+	reset(ntlm->negotiate.buf);
+	ntlm->negotiate.pos = 0;
+	ntlm->negotiate.len = 0;
+
+	reset(ntlm->response.buf);
+	ntlm->response.pos = 0;
+	ntlm->response.len = 0;
+
 	free(ntlm->challenge.target_info);
 	free(ntlm->challenge.target);
 	free(ntlm->challenge.target_domain);
 	free(ntlm->challenge.target_domain_dns);
 	free(ntlm->challenge.target_server);
 	free(ntlm->challenge.target_server_dns);
-	free(ntlm->response.buf);
-
-	free(ntlm->hostname);
-	free(ntlm->hostname_utf16);
-	free(ntlm->hostdomain);
-
-	free(ntlm->target);
-	free(ntlm->target_utf16);
-
-	free(ntlm->ntlm2_response);
-
-	free_credentials(ntlm);
-
-	flags = ntlm->flags;
-	hmac_ctx = ntlm->hmac_ctx;
-	unicode_ctx = ntlm->unicode_ctx;
-
-	memset(ntlm, 0, sizeof(struct ntlm_client));
-
-	ntlm->flags = flags;
-	ntlm->hmac_ctx = hmac_ctx;
-	ntlm->unicode_ctx = unicode_ctx;
+	memset(&ntlm->challenge, 0, sizeof(ntlm_challenge));
 }
 
 void ntlm_client_free(ntlm_client *ntlm)
@@ -1413,7 +1418,7 @@ void ntlm_client_free(ntlm_client *ntlm)
 	ntlm_client_reset(ntlm);
 
 	ntlm_hmac_ctx_free(ntlm->hmac_ctx);
-	ntlm_unicode_ctx_free(ntlm->unicode_ctx);
+	ntlm_unicode_shutdown(ntlm);
 
 	free(ntlm);
 }
