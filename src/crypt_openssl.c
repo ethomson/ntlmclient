@@ -20,6 +20,33 @@
 #include "util.h"
 #include "crypt.h"
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+static inline HMAC_CTX *HMAC_CTX_new(void)
+{
+	return calloc(1, sizeof(HMAC_CTX));
+}
+
+static inline int HMAC_CTX_reset(HMAC_CTX *ctx)
+{
+	HMAC_CTX_cleanup(ctx);
+	ntlm_memzero(ctx, sizeof(HMAC_CTX));
+	return 1;
+}
+
+static inline void HMAC_CTX_free(HMAC_CTX *ctx)
+{
+	if (ctx)
+		HMAC_CTX_cleanup(ctx);
+
+	free(ctx);
+}
+#endif
+
+bool ntlm_crypt_init(ntlm_client *ntlm)
+{
+	return ((ntlm->crypt_ctx.hmac = HMAC_CTX_new()) != NULL);
+}
+
 bool ntlm_random_bytes(
 	unsigned char *out,
 	ntlm_client *ntlm,
@@ -64,73 +91,42 @@ bool ntlm_md4_digest(
 	return true;
 }
 
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-static inline void HMAC_CTX_free(HMAC_CTX *ctx)
-{
-	if (ctx)
-		HMAC_CTX_cleanup(ctx);
-
-	free(ctx);
-}
-
-static inline int HMAC_CTX_reset(HMAC_CTX *ctx)
-{
-	HMAC_CTX_cleanup(ctx);
-	ntlm_memzero(ctx, sizeof(HMAC_CTX));
-	return 1;
-}
-
-static inline HMAC_CTX *HMAC_CTX_new(void)
-{
-	return calloc(1, sizeof(HMAC_CTX));
-}
-#endif
-
-ntlm_hmac_ctx *ntlm_hmac_ctx_init(ntlm_client *ntlm)
-{
-	NTLM_UNUSED(ntlm);
-	return HMAC_CTX_new();
-}
-
-bool ntlm_hmac_ctx_reset(ntlm_hmac_ctx *ctx)
-{
-	return HMAC_CTX_reset(ctx);
-}
-
 bool ntlm_hmac_md5_init(
-	ntlm_hmac_ctx *ctx,
+	ntlm_client *ntlm,
 	const unsigned char *key,
 	size_t key_len)
 {
-	return HMAC_Init_ex(ctx, key, key_len, EVP_md5(), NULL);
+	return HMAC_CTX_reset(ntlm->crypt_ctx.hmac) &&
+	       HMAC_Init_ex(ntlm->crypt_ctx.hmac, key, key_len, EVP_md5(), NULL);
 }
 
 bool ntlm_hmac_md5_update(
-	ntlm_hmac_ctx *ctx,
+	ntlm_client *ntlm,
 	const unsigned char *in,
 	size_t in_len)
 {
-	return HMAC_Update(ctx, in, in_len);
+	return HMAC_Update(ntlm->crypt_ctx.hmac, in, in_len);
 }
 
 bool ntlm_hmac_md5_final(
 	unsigned char *out,
 	size_t *out_len,
-	ntlm_hmac_ctx *ctx)
+	ntlm_client *ntlm)
 {
 	unsigned int len;
 
 	if (*out_len < CRYPT_MD5_DIGESTSIZE)
 		return false;
 
-	if (!HMAC_Final(ctx, out, &len))
+	if (!HMAC_Final(ntlm->crypt_ctx.hmac, out, &len))
 		return false;
 
 	*out_len = len;
 	return true;
 }
 
-void ntlm_hmac_ctx_free(ntlm_hmac_ctx *ctx)
+void ntlm_crypt_shutdown(ntlm_client *ntlm)
 {
-	HMAC_CTX_free(ctx);
+	HMAC_CTX_free(ntlm->crypt_ctx.hmac);
+	ntlm->crypt_ctx.hmac = NULL;
 }

@@ -21,7 +21,7 @@
 
 typedef struct ntlm_unicode_ctx ntlm_unicode_ctx;
 
-extern int ntlm_unicode_init(ntlm_client *ntlm);
+extern bool ntlm_unicode_init(ntlm_client *ntlm);
 
 bool ntlm_unicode_utf8_to_16(
 	char **converted,

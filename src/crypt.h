@@ -27,7 +27,7 @@ typedef unsigned char ntlm_des_block[CRYPT_DES_BLOCKSIZE];
 
 typedef struct ntlm_crypt_ctx ntlm_crypt_ctx;
 
-extern int ntlm_crypt_init(ntlm_client *ntlm);
+extern bool ntlm_crypt_init(ntlm_client *ntlm);
 
 extern bool ntlm_random_bytes(
 	unsigned char *out,

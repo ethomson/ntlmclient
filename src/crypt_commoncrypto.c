@@ -18,10 +18,10 @@
 #include "ntlm.h"
 #include "crypt.h"
 
-int ntlm_crypt_init(ntlm_client *ntlm)
+bool ntlm_crypt_init(ntlm_client *ntlm)
 {
 	memset(&ntlm->crypt_ctx, 0, sizeof(ntlm_crypt_ctx));
-	return 0;
+	return true;
 }
 
 bool ntlm_random_bytes(

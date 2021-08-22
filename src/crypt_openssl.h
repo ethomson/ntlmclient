@@ -13,9 +13,17 @@
 
 /* OpenSSL 1.1.0 uses opaque structs, we'll reuse these. */
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-typedef struct hmac_ctx_st ntlm_hmac_ctx;
+
+struct ntlm_crypt_ctx {
+	struct hmac_ctx_st *hmac;
+};
+
 #else
-# define ntlm_hmac_ctx HMAC_CTX
+
+struct ntlm_crypt_ctx {
+	HMAC_CTX *hmac;
+};
+
 #endif
 
 #endif /* PRIVATE_CRYPT_OPENSSL_H__ */

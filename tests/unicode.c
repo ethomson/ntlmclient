@@ -7,6 +7,7 @@ static ntlm_client *ntlm;
 void test_unicode__initialize(void)
 {
 	cl_assert(ntlm = ntlm_client_init(NTLM_CLIENT_DEFAULTS));
+	cl_assert(ntlm_unicode_init(ntlm));
 }
 
 void test_unicode__cleanup(void)

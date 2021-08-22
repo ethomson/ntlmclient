@@ -277,10 +277,10 @@ static ConversionResult ConvertUTF8toUTF16 (
 }
 
 
-int ntlm_unicode_init(ntlm_client *ntlm)
+bool ntlm_unicode_init(ntlm_client *ntlm)
 {
 	NTLM_UNUSED(ntlm);
-	return 0;
+	return true;
 }
 
 typedef enum {

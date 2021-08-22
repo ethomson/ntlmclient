@@ -52,15 +52,19 @@ ntlm_client *ntlm_client_init(ntlm_client_flags flags)
 
 	ntlm->flags = flags;
 
-	if (ntlm_crypt_init(ntlm) < 0 || ntlm_unicode_init(ntlm) < 0) {
-		ntlm_crypt_shutdown(ntlm);
-		ntlm_unicode_shutdown(ntlm);
-		free(ntlm);
-		return NULL;
-	}
-
 	return ntlm;
 }
+
+#define ENSURE_INITIALIZED(ntlm) \
+	do { \
+		if (!(ntlm)->unicode_initialized) \
+			(ntlm)->unicode_initialized = ntlm_unicode_init((ntlm)); \
+		if (!(ntlm)->crypt_initialized) \
+			(ntlm)->crypt_initialized = ntlm_crypt_init((ntlm)); \
+		if (!(ntlm)->unicode_initialized || \
+		    !(ntlm)->crypt_initialized) \
+			return -1; \
+	} while(0)
 
 void ntlm_client_set_errmsg(ntlm_client *ntlm, const char *errmsg)
 {
@@ -108,6 +112,8 @@ int ntlm_client_set_hostname(
 	const char *domain)
 {
 	assert(ntlm);
+
+	ENSURE_INITIALIZED(ntlm);
 
 	free_hostname(ntlm);
 
@@ -164,6 +170,8 @@ int ntlm_client_set_credentials(
 {
 	assert(ntlm);
 
+	ENSURE_INITIALIZED(ntlm);
+
 	free_credentials(ntlm);
 
 	if ((username && (ntlm->username = strdup(username)) == NULL) ||
@@ -211,6 +219,8 @@ int ntlm_client_set_credentials(
 int ntlm_client_set_target(ntlm_client *ntlm, const char *target)
 {
 	assert(ntlm);
+
+	ENSURE_INITIALIZED(ntlm);
 
 	free(ntlm->target);
 	free(ntlm->target_utf16);
@@ -710,6 +720,8 @@ int ntlm_client_set_challenge(
 	bool unicode, has_target_info = false;
 
 	assert(ntlm && (challenge_msg || !challenge_msg_len));
+
+	ENSURE_INITIALIZED(ntlm);
 
 	if (ntlm->state != NTLM_STATE_NEGOTIATE &&
 		ntlm->state != NTLM_STATE_CHALLENGE) {
@@ -1226,6 +1238,8 @@ int ntlm_client_response(
 	bool unicode;
 
 	assert(out && out_len && ntlm);
+
+	ENSURE_INITIALIZED(ntlm);
 
 	*out = NULL;
 	*out_len = 0;

@@ -68,9 +68,11 @@ struct ntlm_client {
 
 	ntlm_state state;
 
-	/* crypto contexts */
+	/* subsystem contexts */
 	ntlm_crypt_ctx crypt_ctx;
 	ntlm_unicode_ctx unicode_ctx;
+	int crypt_initialized : 1,
+	    unicode_initialized : 1;
 
 	/* error message as set by the library */
 	const char *errmsg;

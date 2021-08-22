@@ -16,25 +16,13 @@
 #include "ntlm.h"
 #include "compat.h"
 
-int ntlm_unicode_init(ntlm_client *ntlm)
-{
-	ntlm->unicode_ctx.utf8_to_16 = (iconv_t)-1;
-	ntlm->unicode_ctx.utf16_to_8 = (iconv_t)-1;
-
-	return 0;
-}
-
 typedef enum {
 	unicode_iconv_utf8_to_16,
 	unicode_iconv_utf16_to_8
 } unicode_iconv_encoding_direction;
 
-static inline bool unicode_iconv_init(ntlm_client *ntlm)
+bool ntlm_unicode_init(ntlm_client *ntlm)
 {
-	if (ntlm->unicode_ctx.utf8_to_16 != (iconv_t)-1 ||
-	    ntlm->unicode_ctx.utf16_to_8 != (iconv_t)-1)
-		return true;
-
 	ntlm->unicode_ctx.utf8_to_16 = iconv_open("UTF-16LE", "UTF-8");
 	ntlm->unicode_ctx.utf16_to_8 = iconv_open("UTF-8", "UTF-16LE");
 
@@ -66,9 +54,6 @@ static inline bool unicode_iconv_encoding_convert(
 
 	*converted = NULL;
 	*converted_len = 0;
-
-	if (!unicode_iconv_init(ntlm))
-		return false;
 
 	/*
 	 * When translating UTF8 to UTF16, these strings are only used
@@ -179,10 +164,12 @@ bool ntlm_unicode_utf16_to_8(
 
 void ntlm_unicode_shutdown(ntlm_client *ntlm)
 {
-	if (ntlm->unicode_ctx.utf16_to_8 != (iconv_t)-1)
+	if (ntlm->unicode_ctx.utf16_to_8 != (iconv_t)0 &&
+	    ntlm->unicode_ctx.utf16_to_8 != (iconv_t)-1)
 		iconv_close(ntlm->unicode_ctx.utf16_to_8);
 
-	if (ntlm->unicode_ctx.utf8_to_16 != (iconv_t)-1)
+	if (ntlm->unicode_ctx.utf8_to_16 != (iconv_t)0 &&
+	    ntlm->unicode_ctx.utf8_to_16 != (iconv_t)-1)
 		iconv_close(ntlm->unicode_ctx.utf8_to_16);
 
 	ntlm->unicode_ctx.utf8_to_16 = (iconv_t)-1;
