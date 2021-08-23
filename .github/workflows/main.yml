@@ -13,45 +13,45 @@ jobs:
         config:
           # Linux (amd64, Trusty, GCC, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/trusty-amd64:latest'
+            container: 'ghcr.io/libgit2/libgit2/trusty-amd64:latest'
             env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
 
           # Linux (amd64, Trusty, GCC, mbedTLS)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/trusty-amd64:latest'
+            container: 'ghcr.io/libgit2/libgit2/trusty-amd64:latest'
             env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=mbedtls -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
 
           # Linux (amd64, Trusty, Clang, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/trusty-amd64:latest'
+            container: 'ghcr.io/libgit2/libgit2/trusty-amd64:latest'
             env: { CC: 'clang', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
 
           # Linux (amd64, Trusty, Clang, mbedTLS)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/trusty-amd64:latest'
+            container: 'ghcr.io/libgit2/libgit2/trusty-amd64:latest'
             env: { CC: 'clang', CMAKE_OPTIONS: '-DCRYPT=mbedtls -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
 
           # Linux (x86, Bionic, gcc, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/bionic-x86:latest'
+            container: 'ghcr.io/libgit2/libgit2/bionic-x86:latest'
             qemu: true
             env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
 
           # Linux (x86, Bionic, clang, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/bionic-x86:latest'
+            container: 'ghcr.io/libgit2/libgit2/bionic-x86:latest'
             qemu: true
             env: { CC: 'clang', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
 
           # Linux (arm32, Bionic, gcc, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/bionic-arm32:latest'
+            container: 'ghcr.io/libgit2/libgit2/bionic-arm32:latest'
             qemu: true
             env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin' }
 
           # Linux (arm64, Bionic, gcc, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/bionic-arm64:latest'
+            container: 'ghcr.io/libgit2/libgit2/bionic-arm64:latest'
             qemu: true
             env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin' }
 
