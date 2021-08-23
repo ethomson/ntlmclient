@@ -1422,10 +1422,10 @@ void ntlm_client_free(ntlm_client *ntlm)
 	if (!ntlm)
 		return;
 
-	ntlm_client_reset(ntlm);
-
 	ntlm_crypt_shutdown(ntlm);
 	ntlm_unicode_shutdown(ntlm);
+
+	ntlm_client_reset(ntlm);
 
 	free(ntlm);
 }
