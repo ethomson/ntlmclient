@@ -11,24 +11,24 @@ jobs:
     strategy:
       matrix:
         config:
-          # Linux (amd64, Trusty, GCC, OpenSSL)
+          # Linux (amd64, Xenial, GCC, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'ghcr.io/libgit2/libgit2/trusty-amd64:latest'
+            container: 'ghcr.io/libgit2/libgit2/xenial:latest'
             env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
 
-          # Linux (amd64, Trusty, GCC, mbedTLS)
+          # Linux (amd64, Xenial, GCC, mbedTLS)
           - platform: 'ubuntu-latest'
-            container: 'ghcr.io/libgit2/libgit2/trusty-amd64:latest'
+            container: 'ghcr.io/libgit2/libgit2/xenial:latest'
             env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=mbedtls -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
 
-          # Linux (amd64, Trusty, Clang, OpenSSL)
+          # Linux (amd64, Xenial, Clang, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'ghcr.io/libgit2/libgit2/trusty-amd64:latest'
+            container: 'ghcr.io/libgit2/libgit2/xenial:latest'
             env: { CC: 'clang', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
 
-          # Linux (amd64, Trusty, Clang, mbedTLS)
+          # Linux (amd64, Xenial, Clang, mbedTLS)
           - platform: 'ubuntu-latest'
-            container: 'ghcr.io/libgit2/libgit2/trusty-amd64:latest'
+            container: 'ghcr.io/libgit2/libgit2/xenial:latest'
             env: { CC: 'clang', CMAKE_OPTIONS: '-DCRYPT=mbedtls -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
 
           # Linux (x86, Bionic, gcc, OpenSSL)
