@@ -11,49 +11,96 @@ jobs:
     strategy:
       matrix:
         config:
-          # Linux (amd64, Trusty, GCC, OpenSSL)
+          # Linux (amd64, Xenial, GCC, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/trusty-amd64:latest'
+            container: 'ghcr.io/libgit2/libgit2/xenial:latest'
             env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
 
-          # Linux (amd64, Trusty, GCC, mbedTLS)
+          # Linux (amd64, Xenial, GCC, mbedTLS)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/trusty-amd64:latest'
+            container: 'ghcr.io/libgit2/libgit2/xenial:latest'
             env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=mbedtls -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
 
-          # Linux (amd64, Trusty, Clang, OpenSSL)
+          # Linux (amd64, Xenial, Clang, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/trusty-amd64:latest'
+            container: 'ghcr.io/libgit2/libgit2/xenial:latest'
             env: { CC: 'clang', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
 
-          # Linux (amd64, Trusty, Clang, mbedTLS)
+          # Linux (amd64, Xenial, Clang, OpenSSL Dynamic)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/trusty-amd64:latest'
+            container: 'ghcr.io/libgit2/libgit2/xenial:latest'
+            env: { CC: 'clang', CMAKE_OPTIONS: '-DCRYPT=openssl-dynamic -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
+
+          # Linux (amd64, Xenial, Clang, mbedTLS)
+          - platform: 'ubuntu-latest'
+            container: 'ghcr.io/libgit2/libgit2/xenial:latest'
             env: { CC: 'clang', CMAKE_OPTIONS: '-DCRYPT=mbedtls -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
 
           # Linux (x86, Bionic, gcc, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/bionic-x86:latest'
+            container: 'ghcr.io/libgit2/libgit2/bionic-x86:latest'
             qemu: true
-            env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
+            env: { CC: 'gcc', CMAKE_GENERATOR: 'Ninja', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
+
+          # Linux (x86, Bionic, gcc, OpenSSL Dynamic)
+          - platform: 'ubuntu-latest'
+            container: 'ghcr.io/libgit2/libgit2/bionic-x86:latest'
+            qemu: true
+            env: { CC: 'gcc', CMAKE_GENERATOR: 'Ninja', CMAKE_OPTIONS: '-DCRYPT=openssl-dynamic -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
 
           # Linux (x86, Bionic, clang, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/bionic-x86:latest'
+            container: 'ghcr.io/libgit2/libgit2/bionic-x86:latest'
             qemu: true
-            env: { CC: 'clang', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
+            env: { CC: 'clang', CMAKE_GENERATOR: 'Ninja', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=iconv', LEAK_CHECK: 'valgrind' }
 
           # Linux (arm32, Bionic, gcc, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/bionic-arm32:latest'
+            container: 'ghcr.io/libgit2/libgit2/bionic-arm32:latest'
             qemu: true
-            env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin' }
+            env: { CC: 'gcc', CMAKE_GENERATOR: 'Ninja', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin' }
+
+          # Linux (arm32, Bionic, gcc, OpenSSL Dynamic)
+          - platform: 'ubuntu-latest'
+            container: 'ghcr.io/libgit2/libgit2/bionic-arm32:latest'
+            qemu: true
+            env: { CC: 'gcc', CMAKE_GENERATOR: 'Ninja', CMAKE_OPTIONS: '-DCRYPT=openssl-dynamic -DUNICODE=builtin' }
 
           # Linux (arm64, Bionic, gcc, OpenSSL)
           - platform: 'ubuntu-latest'
-            container: 'libgit2/bionic-arm64:latest'
+            container: 'ghcr.io/libgit2/libgit2/bionic-arm64:latest'
+            qemu: true
+            env: { CC: 'gcc', CMAKE_GENERATOR: 'Ninja', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin' }
+
+          # Linux (arm64, Bionic, gcc, OpenSSL Dynamic)
+          - platform: 'ubuntu-latest'
+            container: 'ghcr.io/libgit2/libgit2/bionic-arm64:latest'
+            qemu: true
+            env: { CC: 'gcc', CMAKE_GENERATOR: 'Ninja', CMAKE_OPTIONS: '-DCRYPT=openssl-dynamic -DUNICODE=builtin' }
+
+          # Linux (amd64, CentOS 7, gcc, OpenSSL)
+          - platform: 'ubuntu-latest'
+            container: 'ghcr.io/libgit2/libgit2/centos7:latest'
             qemu: true
             env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin' }
+
+          # Linux (arm64, CentOS 7, gcc, OpenSSL Dynamic)
+          - platform: 'ubuntu-latest'
+            container: 'ghcr.io/libgit2/libgit2/centos7:latest'
+            qemu: true
+            env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl-dynamic -DUNICODE=builtin' }
+
+          # Linux (amd64, CentOS 8, gcc, OpenSSL)
+          - platform: 'ubuntu-latest'
+            container: 'ghcr.io/libgit2/libgit2/centos8:latest'
+            qemu: true
+            env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin' }
+
+          # Linux (arm64, CentOS 8, gcc, OpenSSL Dynamic)
+          - platform: 'ubuntu-latest'
+            container: 'ghcr.io/libgit2/libgit2/centos8:latest'
+            qemu: true
+            env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl-dynamic -DUNICODE=builtin' }
 
           # macOS
           - platform: 'macos-latest'

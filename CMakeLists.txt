@@ -19,7 +19,7 @@ OPTION(ENABLE_ASAN   "Enable AddressSanitizer" OFF)
 OPTION(ENABLE_WERROR "Treat warnings as errors" ON)
 
 SET(UNICODE "default" CACHE STRING "Unicode implementation to use; may be 'iconv' or 'builtin'.")
-SET(CRYPT   "default" CACHE STRING "Cryptographic implementation to use; may be 'commoncrypto', 'mbedtls' or 'openssl'.")
+SET(CRYPT   "default" CACHE STRING "Cryptographic implementation to use; may be 'commoncrypto', 'mbedtls', 'openssl', or 'openssl-dynamic'.")
 
 SET(PATH_SRC     "${NTLM_SOURCE_DIR}/src")
 SET(PATH_INCLUDE "${NTLM_SOURCE_DIR}/include")
@@ -119,11 +119,19 @@ ELSEIF(CRYPT STREQUAL "openssl")
 	LIST(APPEND NTLM_PC_LIBS ${OPENSSL_LIBRARIES})
 
 	ADD_FEATURE_INFO(CRYPT ON "using OpenSSL")
+ELSEIF(CRYPT STREQUAL "openssl-dynamic")
+	ADD_DEFINITIONS(-DCRYPT_OPENSSL)
+	ADD_DEFINITIONS(-DCRYPT_OPENSSL_DYNAMIC)
+	FILE(GLOB NTLM_SRC_CRYPT "${PATH_SRC}/crypt_openssl.c")
+
+	LIST(APPEND NTLM_LIBS dl)
+
+	ADD_FEATURE_INFO(CRYPT ON "using OpenSSL (dynamic)")
 ELSE()
 	MESSAGE(FATAL_ERROR "invalid cryptographic support requested: ${CRYPT}")
 ENDIF()
 
-SET(CMAKE_C_FLAGS "-std=c99 -D_DEFAULT_SOURCE")
+SET(CMAKE_C_FLAGS "-std=gnu99 -D_DEFAULT_SOURCE")
 
 ENABLE_WARNINGS(all)
 ENABLE_WARNINGS(extra)
@@ -186,6 +194,9 @@ IF(BUILD_LIBRARY)
 ENDIF()
 
 IF(BUILD_TESTS)
+	SET(Python_ADDITIONAL_VERSIONS 3 2.7)
+	FIND_PACKAGE(PythonInterp)
+
 	FILE(GLOB NTLM_TEST "${PATH_TESTS}/*.c")
 
 	ADD_CUSTOM_COMMAND(

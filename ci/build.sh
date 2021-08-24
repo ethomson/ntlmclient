@@ -5,6 +5,7 @@ set -e
 SOURCE_DIR=${SOURCE_DIR:-$( cd "$( dirname "${BASH_SOURCE[0]}" )" && dirname $( pwd ) )}
 BUILD_DIR=$(pwd)
 CC=${CC:-cc}
+CMAKE_GENERATOR=${CMAKE_GENERATOR:-Unix Makefiles}
 
 indent() { sed "s/^/    /"; }
 
@@ -35,8 +36,8 @@ echo "##########################################################################
 echo "## Configuring build environment"
 echo "##############################################################################"
 
-echo cmake ${SOURCE_DIR} -DENABLE_WERROR=ON ${CMAKE_OPTIONS}
-cmake ${SOURCE_DIR} -DENABLE_WERROR=ON ${CMAKE_OPTIONS}
+echo cmake ${SOURCE_DIR} -DENABLE_WERROR=ON -G ${CMAKE_GENERATOR} ${CMAKE_OPTIONS}
+cmake ${SOURCE_DIR} -DENABLE_WERROR=ON -G "${CMAKE_GENERATOR}" ${CMAKE_OPTIONS}
 
 echo ""
 echo "##############################################################################"
