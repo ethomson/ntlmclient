@@ -22,6 +22,19 @@ extern "C" {
 
 typedef struct ntlm_client ntlm_client;
 
+typedef enum {
+	/**
+	 * An error occurred; more details are available by querying
+	 * `ntlm_client_errmsg`.
+	 */
+	NTLM_CLIENT_ERROR = -1,
+
+	/**
+	 * The input provided to the function is missing or invalid.
+	 */
+	NTLM_CLIENT_ERROR_INVALID_INPUT = -2,
+} ntlm_error_code;
+
 /*
  * Flags for initializing the `ntlm_client` context.  A combination of
  * these flags can be provided to `ntlm_client_init`.

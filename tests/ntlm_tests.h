@@ -5,6 +5,10 @@
 #include "ntlm.h"
 #include "util.h"
 
+#define cl_must_fail_with_(val, expr, desc) clar__assert((expr) == (val), __FILE__, __LINE__, "Expected function call to fail with " #val ": " #expr, desc, 0)
+
+#define cl_must_fail_with(val, expr) cl_must_fail_with_(val, expr, NULL)
+
 #define cl_ntlm_pass(ntlm, expr) cl_ntlm_expect((ntlm), (expr), 0, __FILE__, __LINE__)
 
 #define cl_ntlm_expect(ntlm, expr, expected, file, line) do { \
