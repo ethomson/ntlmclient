@@ -1,5 +1,6 @@
 #include "clar.h"
 #include "ntlm.h"
+#include "ntlm_tests.h"
 
 static ntlm_client *ntlm;
 
@@ -11,6 +12,31 @@ void test_inputs__initialize(void)
 void test_inputs__cleanup(void)
 {
 	ntlm_client_free(ntlm);
+}
+
+void test_inputs__null(void)
+{
+	const unsigned char *msg;
+	size_t msg_len;
+
+	cl_assert(ntlm_client_errmsg(NULL) != NULL);
+
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_set_hostname(NULL, "hostname", "HOSTDOMAIN"));
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_set_credentials(NULL, "user", "DOMAIN", "pass!"));
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_set_target(NULL, "target"));
+
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_negotiate(NULL, &msg_len, ntlm));
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_negotiate(&msg, NULL, ntlm));
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_negotiate(&msg, &msg_len, NULL));
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_negotiate(NULL, NULL, NULL));
+
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_set_challenge(NULL, (const unsigned char *)"foo", 3));
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_set_challenge(ntlm, NULL, 3));
+
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_response(NULL, &msg_len, ntlm));
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_response(&msg, NULL, ntlm));
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_response(&msg, &msg_len, NULL));
+	cl_must_fail_with(NTLM_CLIENT_ERROR_INVALID_INPUT, ntlm_client_response(NULL, NULL, NULL));
 }
 
 void test_inputs__set_hostname(void)

@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <assert.h>
 #include <errno.h>
 #include <ctype.h>
 #include <unistd.h>
@@ -23,6 +22,18 @@
 #include "crypt.h"
 #include "compat.h"
 #include "util.h"
+
+#define NTLM_ASSERT_ARG(expr) do { \
+		if (!(expr)) \
+			return NTLM_CLIENT_ERROR_INVALID_INPUT; \
+	} while(0)
+
+#define NTLM_ASSERT(ntlm, expr) do { \
+		if (!(expr)) { \
+			ntlm_client_set_errmsg(ntlm, "internal error: " #expr); \
+			return -1; \
+		} \
+	} while(0)
 
 unsigned char ntlm_client_signature[] = NTLM_SIGNATURE;
 
@@ -74,7 +85,9 @@ void ntlm_client_set_errmsg(ntlm_client *ntlm, const char *errmsg)
 
 const char *ntlm_client_errmsg(ntlm_client *ntlm)
 {
-	assert(ntlm);
+	if (!ntlm)
+		return "internal error";
+
 	return ntlm->errmsg ? ntlm->errmsg : "no error";
 }
 
@@ -84,7 +97,7 @@ int ntlm_client_set_version(
 	uint8_t minor,
 	uint16_t build)
 {
-	assert(ntlm);
+	NTLM_ASSERT_ARG(ntlm);
 
 	ntlm->host_version.major = major;
 	ntlm->host_version.minor = minor;
@@ -111,8 +124,7 @@ int ntlm_client_set_hostname(
 	const char *hostname,
 	const char *domain)
 {
-	assert(ntlm);
-
+	NTLM_ASSERT_ARG(ntlm);
 	ENSURE_INITIALIZED(ntlm);
 
 	free_hostname(ntlm);
@@ -168,8 +180,7 @@ int ntlm_client_set_credentials(
 	const char *domain,
 	const char *password)
 {
-	assert(ntlm);
-
+	NTLM_ASSERT_ARG(ntlm);
 	ENSURE_INITIALIZED(ntlm);
 
 	free_credentials(ntlm);
@@ -218,8 +229,7 @@ int ntlm_client_set_credentials(
 
 int ntlm_client_set_target(ntlm_client *ntlm, const char *target)
 {
-	assert(ntlm);
-
+	NTLM_ASSERT_ARG(ntlm);
 	ENSURE_INITIALIZED(ntlm);
 
 	free(ntlm->target);
@@ -248,14 +258,16 @@ int ntlm_client_set_target(ntlm_client *ntlm, const char *target)
 
 int ntlm_client_set_nonce(ntlm_client *ntlm, uint64_t nonce)
 {
-	assert(ntlm);
+	NTLM_ASSERT_ARG(ntlm);
+
 	ntlm->nonce = nonce;
 	return 0;
 }
 
 int ntlm_client_set_timestamp(ntlm_client *ntlm, uint64_t timestamp)
 {
-	assert(ntlm);
+	NTLM_ASSERT_ARG(ntlm);
+
 	ntlm->timestamp = timestamp;
 	return 0;
 }
@@ -601,7 +613,9 @@ int ntlm_client_negotiate(
 	size_t hostname_offset = 0;
 	uint32_t flags = 0;
 
-	assert(out && out_len && ntlm);
+	NTLM_ASSERT_ARG(out);
+	NTLM_ASSERT_ARG(out_len);
+	NTLM_ASSERT_ARG(ntlm);
 
 	*out = NULL;
 	*out_len = 0;
@@ -684,20 +698,22 @@ int ntlm_client_negotiate(
 		return -1;
 
 	if (hostname_len > 0) {
-		assert(hostname_offset == ntlm->negotiate.pos);
+		NTLM_ASSERT(ntlm, hostname_offset == ntlm->negotiate.pos);
+
 		if (!write_buf(ntlm, &ntlm->negotiate,
 			(const unsigned char *)ntlm->hostname, hostname_len))
 			return -1;
 	}
 
 	if (domain_len > 0) {
-		assert(domain_offset == ntlm->negotiate.pos);
+		NTLM_ASSERT(ntlm, domain_offset == ntlm->negotiate.pos);
+
 		if (!write_buf(ntlm, &ntlm->negotiate,
 			(const unsigned char *)ntlm->hostdomain, domain_len))
 			return -1;
 	}
 
-	assert(ntlm->negotiate.pos == ntlm->negotiate.len);
+	NTLM_ASSERT(ntlm, ntlm->negotiate.pos == ntlm->negotiate.len);
 
 	ntlm->state = NTLM_STATE_CHALLENGE;
 
@@ -719,7 +735,8 @@ int ntlm_client_set_challenge(
 	uint32_t name_offset, info_offset = 0;
 	bool unicode, has_target_info = false;
 
-	assert(ntlm && (challenge_msg || !challenge_msg_len));
+	NTLM_ASSERT_ARG(ntlm);
+	NTLM_ASSERT_ARG(challenge_msg || !challenge_msg_len);
 
 	ENSURE_INITIALIZED(ntlm);
 
@@ -1101,7 +1118,7 @@ static bool generate_ntlm2_hash(
 		return false;
 	}
 
-	assert(out_len == NTLM_NTLM2_HASH_LEN);
+	NTLM_ASSERT(ntlm, out_len == NTLM_NTLM2_HASH_LEN);
 	return true;
 }
 
@@ -1122,7 +1139,7 @@ static bool generate_ntlm2_challengehash(
 		return false;
 	}
 
-	assert(out_len == 16);
+	NTLM_ASSERT(ntlm, out_len == 16);
 	return true;
 }
 
@@ -1143,7 +1160,7 @@ static bool generate_lm2_response(ntlm_client *ntlm,
 		return false;
 	}
 
-	assert(lm2_len == 16);
+	NTLM_ASSERT(ntlm, lm2_len == 16);
 
 	memcpy(&ntlm->lm_response[0], lm2_challengehash, 16);
 	memcpy(&ntlm->lm_response[16], &local_nonce, 8);
@@ -1237,7 +1254,9 @@ int ntlm_client_response(
 	uint32_t flags = 0;
 	bool unicode;
 
-	assert(out && out_len && ntlm);
+	NTLM_ASSERT_ARG(out);
+	NTLM_ASSERT_ARG(out_len);
+	NTLM_ASSERT_ARG(ntlm);
 
 	ENSURE_INITIALIZED(ntlm);
 
@@ -1362,7 +1381,7 @@ int ntlm_client_response(
 		!write_buf(ntlm, &ntlm->response, session, session_len))
 		return -1;
 
-	assert(ntlm->response.pos == ntlm->response.len);
+	NTLM_ASSERT(ntlm, ntlm->response.pos == ntlm->response.len);
 
 	ntlm->state = NTLM_STATE_COMPLETE;
 
@@ -1374,7 +1393,8 @@ int ntlm_client_response(
 
 void ntlm_client_reset(ntlm_client *ntlm)
 {
-	assert(ntlm);
+	if (!ntlm)
+		return;
 
 	ntlm->state = NTLM_STATE_NEGOTIATE;
 
