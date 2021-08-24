@@ -56,7 +56,7 @@ static inline void HMAC_CTX_cleanup(HMAC_CTX *ctx)
 
 #ifdef CRYPT_OPENSSL_DYNAMIC
 
-bool ntlm_crypt_init_functions(ntlm_client *ntlm)
+static bool ntlm_crypt_init_functions(ntlm_client *ntlm)
 {
 	void *handle;
 
@@ -121,7 +121,7 @@ bool ntlm_crypt_init_functions(ntlm_client *ntlm)
 
 #else /* CRYPT_OPENSSL_DYNAMIC */
 
-bool ntlm_crypt_init_functions(ntlm_client *ntlm)
+static bool ntlm_crypt_init_functions(ntlm_client *ntlm)
 {
 	ntlm->crypt_ctx.des_set_key_fn = DES_set_key;
 	ntlm->crypt_ctx.des_ecb_encrypt_fn = DES_ecb_encrypt;
