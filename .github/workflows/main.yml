@@ -40,7 +40,7 @@ jobs:
           - platform: 'ubuntu-latest'
             container: 'ghcr.io/libgit2/libgit2/bionic-x86:latest'
             qemu: true
-            env: { CC: 'gcc', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
+            env: { CC: 'gcc', CMAKE_GENERATOR: 'Ninja', CMAKE_OPTIONS: '-DCRYPT=openssl -DUNICODE=builtin', LEAK_CHECK: 'valgrind' }
 
           # Linux (x86, Bionic, gcc, OpenSSL Dynamic)
           - platform: 'ubuntu-latest'
