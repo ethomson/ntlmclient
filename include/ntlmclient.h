@@ -15,10 +15,10 @@
 extern "C" {
 #endif
 
-#define NTLM_CLIENT_VERSION         "0.0.1"
+#define NTLM_CLIENT_VERSION         "0.9.0"
 #define NTLM_CLIENT_VERSION_MAJOR   0
-#define NTLM_CLIENT_VERSION_MINOR   0
-#define NTLM_CLIENT_VERSION_TEENY   1
+#define NTLM_CLIENT_VERSION_MINOR   9
+#define NTLM_CLIENT_VERSION_TEENY   0
 
 typedef struct ntlm_client ntlm_client;
 
