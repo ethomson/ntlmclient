@@ -112,7 +112,7 @@ jobs:
     runs-on: ${{ matrix.config.platform }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up build environment
       run: docker run --rm --privileged multiarch/qemu-user-static:register --reset
       if: matrix.config.qemu == true
