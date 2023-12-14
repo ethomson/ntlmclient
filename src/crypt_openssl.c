@@ -44,7 +44,9 @@ static inline void HMAC_CTX_free(HMAC_CTX *ctx)
 
 #endif
 
-#if OPENSSL_VERSION_NUMBER >= 0x10100000L || defined(CRYPT_OPENSSL_DYNAMIC)
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)) || \
+	(defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER >= 0x03050000fL) || \
+	defined(CRYPT_OPENSSL_DYNAMIC)
 
 static inline void HMAC_CTX_cleanup(HMAC_CTX *ctx)
 {
@@ -61,7 +63,9 @@ static bool ntlm_crypt_init_functions(ntlm_client *ntlm)
 	void *handle;
 
 	if ((handle = dlopen("libssl.so.1.1", RTLD_NOW)) == NULL &&
+	    (handle = dlopen("libssl.1.1.dylib", RTLD_NOW)) == NULL &&
 	    (handle = dlopen("libssl.so.1.0.0", RTLD_NOW)) == NULL &&
+	    (handle = dlopen("libssl.1.0.0.dylib", RTLD_NOW)) == NULL &&
 	    (handle = dlopen("libssl.so.10", RTLD_NOW)) == NULL) {
 		ntlm_client_set_errmsg(ntlm, "could not open libssl");
 		return false;
