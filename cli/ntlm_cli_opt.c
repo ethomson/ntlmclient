@@ -10,7 +10,7 @@
  * This file was produced by using the `rename.pl` script included with
  * adopt.  The command-line specified was:
  *
- * ./rename.pl --out=../ntlmclient/cli/ --filename=ntlm_cli_opt ntlm_opt
+ * ./rename.pl --filename=ntlm_cli_opt ntlm_opt
  */
 
 #include <stdlib.h>
@@ -22,7 +22,7 @@
 #include "ntlm_cli_opt.h"
 
 #ifdef _WIN32
-# include <Windows.h>
+# include <windows.h>
 #else
 # include <fcntl.h>
 # include <sys/ioctl.h>
@@ -78,7 +78,7 @@ INLINE(const ntlm_opt_spec *) spec_for_long(
 
 		/* Handle --option=value arguments */
 		if (spec->type == NTLM_OPT_TYPE_VALUE &&
-		    eql &&
+		    spec->name && eql &&
 		    strncmp(arg, spec->name, eql_pos) == 0 &&
 		    spec->name[eql_pos] == '\0') {
 			*has_value = 1;
@@ -580,6 +580,28 @@ ntlm_opt_status_t ntlm_opt_parse(
 	return validate_required(opt, specs, given_specs);
 }
 
+int ntlm_opt_foreach(
+	const ntlm_opt_spec specs[],
+	char **args,
+	size_t args_len,
+	unsigned int flags,
+	int (*callback)(ntlm_opt *, void *),
+	void *callback_data)
+{
+	ntlm_opt_parser parser;
+	ntlm_opt opt;
+	int ret;
+
+	ntlm_opt_parser_init(&parser, specs, args, args_len, flags);
+
+	while (ntlm_opt_parser_next(&opt, &parser)) {
+		if ((ret = callback(&opt, callback_data)) != 0)
+			return ret;
+	}
+
+	return 0;
+}
+
 static int spec_name_fprint(FILE *file, const ntlm_opt_spec *spec)
 {
 	int error;
@@ -621,7 +643,7 @@ int ntlm_opt_status_fprint(
 		if ((error = fprintf(file, "argument '")) < 0 ||
 		    (error = spec_name_fprint(file, opt->spec)) < 0 ||
 		    (error = fprintf(file, "' requires a value.\n")) < 0)
-			;
+			break;
 		break;
 	case NTLM_OPT_STATUS_MISSING_ARGUMENT:
 		if (spec_is_choice(opt->spec)) {
