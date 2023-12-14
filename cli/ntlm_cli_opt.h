@@ -10,7 +10,7 @@
  * This file was produced by using the `rename.pl` script included with
  * adopt.  The command-line specified was:
  *
- * ./rename.pl --out=../ntlmclient/cli/ --filename=ntlm_cli_opt ntlm_opt
+ * ./rename.pl --filename=ntlm_cli_opt ntlm_opt
  */
 
 #ifndef NTLM_CLI_OPT_H
@@ -299,6 +299,24 @@ ntlm_opt_status_t ntlm_opt_parse(
     char **args,
     size_t args_len,
     unsigned int flags);
+
+/**
+ * Quickly executes the given callback for each argument.
+ *
+ * @param specs A NULL-terminated array of `ntlm_opt_spec`s that can be parsed
+ * @param args The arguments that will be parsed
+ * @param args_len The length of arguments to be parsed
+ * @param flags The `ntlm_opt_flag_t flags for parsing
+ * @param callback The callback to invoke for each specified option
+ * @param callback_data Data to be provided to the callback
+ */
+int ntlm_opt_foreach(
+	const ntlm_opt_spec specs[],
+	char **args,
+	size_t args_len,
+	unsigned int flags,
+	int (*callback)(ntlm_opt *, void *),
+	void *callback_data);
 
 /**
  * Initializes a parser that parses the given arguments according to the
