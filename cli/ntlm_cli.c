@@ -89,51 +89,41 @@ int main(int argc, char **argv)
 	ntlm_opt opt;
 
 	ntlm_opt_spec opt_specs[] = {
-		{ NTLM_OPT_SWITCH, "negotiate", 'n', &type, NTLM_CLI_NEGOTIATE,
-		  NULL, "produce a negotiate package",
-		  NTLM_OPT_USAGE_SHOW_LONG },
-		{ NTLM_OPT_SWITCH, "response", 'r', &type, NTLM_CLI_RESPONSE,
-		  NULL, "produce a response to a challenge (required)",
-		  NTLM_OPT_USAGE_CHOICE | NTLM_OPT_USAGE_SHOW_LONG },
+		{ NTLM_OPT_TYPE_SWITCH, "negotiate", 'n', &type, NTLM_CLI_NEGOTIATE,
+		  NTLM_OPT_USAGE_SHOW_LONG, NULL, "produce a negotiate package" },
+		{ NTLM_OPT_TYPE_SWITCH, "response", 'r', &type, NTLM_CLI_RESPONSE,
+		  NTLM_OPT_USAGE_CHOICE | NTLM_OPT_USAGE_SHOW_LONG,
+		  NULL, "produce a response to a challenge (required)" },
 
-		{ NTLM_OPT_VALUE, "target", 't', &target, 0,
-		  "target", "sets the target (the remote hostname)",
-		  0 },
-		{ NTLM_OPT_VALUE, "username", 'u', &username, 0,
-		  "username", "sets the username for authentication",
-		  0 },
-		{ NTLM_OPT_VALUE, "domain", 'd', &domain, 0,
-		  "domain", "sets the user's domain",
-		  0 },
-		{ NTLM_OPT_VALUE,  "password", 'p', &password, 0,
-		  "password", "sets the user's password",
-		  0 },
+		{ NTLM_OPT_TYPE_VALUE, "target", 't', &target, 0,
+		  0, "target", "sets the target (the remote hostname)" },
+		{ NTLM_OPT_TYPE_VALUE, "username", 'u', &username, 0,
+		  0, "username", "sets the username for authentication" },
+		{ NTLM_OPT_TYPE_VALUE, "domain", 'd', &domain, 0,
+		  0, "domain", "sets the user's domain" },
+		{ NTLM_OPT_TYPE_VALUE,  "password", 'p', &password, 0,
+		  0, "password", "sets the user's password" },
 
-		{ NTLM_OPT_BOOL, "enable-lm", 0, &enable_lm, 0,
-		  NULL, "enable LM authentication",
-		  0 },
-		{ NTLM_OPT_BOOL, "enable-ntlm", 0, &enable_ntlm, 0,
-		  NULL, "enable NTLM authentication",
-		  0 },
-		{ NTLM_OPT_BOOL, "disable-ntlm2", 0, &disable_ntlm2, 0,
-		  NULL, "disable NTLM2 authentication",
-		  0 },
+		{ NTLM_OPT_TYPE_BOOL, "enable-lm", 0, &enable_lm, 0,
+		  0, NULL, "enable LM authentication" },
+		{ NTLM_OPT_TYPE_BOOL, "enable-ntlm", 0, &enable_ntlm, 0,
+		  0, NULL, "enable NTLM authentication" },
+		{ NTLM_OPT_TYPE_BOOL, "disable-ntlm2", 0, &disable_ntlm2, 0,
+		  0, NULL, "disable NTLM2 authentication" },
 
-		{ NTLM_OPT_BOOL, "raw", 0, &raw, 0,
-		  NULL, "read and write raw binary (instead of base64)",
-		  0 },
-		{ NTLM_OPT_SWITCH, "help", 0, &help, 0,
-		  NULL, "display help",
-		  0 },
+		{ NTLM_OPT_TYPE_BOOL, "raw", 0, &raw, 0,
+		  0, NULL, "read and write raw binary (instead of base64)" },
+		{ NTLM_OPT_TYPE_SWITCH, "help", 0, &help, 0,
+		  0, NULL, "display help" },
 
-		{ NTLM_OPT_NONE, NULL, 0, NULL, 0, NULL, NULL, 0 }
+		{ NTLM_OPT_TYPE_NONE, NULL, 0, NULL, 0, 0, NULL, NULL }
 	};
 
-	ntlm_opt_parser_init(&opt_parser, opt_specs, argv + 1, argc - 1);
+	ntlm_opt_parser_init(&opt_parser, opt_specs, argv + 1, argc - 1, 0);
 
 	while (ntlm_opt_parser_next(&opt, &opt_parser)) {
 		if (!opt.spec) {
-			ntlm_opt_status_fprint(stderr, &opt);
+			ntlm_opt_status_fprint(stderr, NULL, &opt);
 			ntlm_opt_usage_fprint(stderr, argv[0], opt_specs);
 			return 129;
 		}
