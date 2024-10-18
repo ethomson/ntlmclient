@@ -48,7 +48,7 @@ NTLM_INLINE(void) HMAC_CTX_free(HMAC_CTX *ctx)
 	(defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER >= 0x03050000fL) || \
 	defined(CRYPT_OPENSSL_DYNAMIC)
 
-static inline void HMAC_CTX_cleanup(HMAC_CTX *ctx)
+NTLM_INLINE(void) HMAC_CTX_cleanup(HMAC_CTX *ctx)
 {
 	NTLM_UNUSED(ctx);
 }
